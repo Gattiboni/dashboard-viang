@@ -51,6 +51,35 @@ dashboard-viang/
 │
 └── .gitignore          → Exclusões de versionamento
 ```
+### Infraestrutura Atualizada — Novembro/2025
+
+**Railway — Projeto:**  
+ID: `c30e94d5-77b0-4da4-a0d2-b2cbbb83102b`  
+Nome: `viang-metabase`
+
+**Serviços ativos no Railway:**
+- `metabase-postgres-viang` (PostgreSQL dedicado ao Metabase)  
+- `metabase-app-2` (Container Metabase OSS)
+
+**Metabase (produção):**  
+URL pública: `https://metabase-app-2-production.up.railway.app/`  
+Porta interna: `3000`  
+Imagem Docker: `metabase/metabase:latest`
+
+**Supabase:**  
+URL: `https://cbnisuoocsrhdqdpmips.supabase.co`  
+Anon key (documentação):  
+`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U`
+
+**Schema criado:** `dashboard`  
+Contém:
+- `api_tokens`  
+- `updates_log`
+
+**Status do Bloco 1:**  
+Infraestrutura concluída, aguardando ingestão de credenciais para APIs (ML, Bling, Upseller).
+
+
 
 ---
 

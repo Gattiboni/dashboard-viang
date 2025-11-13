@@ -36,6 +36,16 @@ O cronograma está dividido em **3 Sprints**, cada uma com entregáveis e subtar
   - Executar ETL piloto com 3 clientes.  
   - Validar registros no Supabase e log de sucesso.
 
+
+### Atualização — Novembro/2025
+
+- Ambiente Metabase operacional no Railway  
+- DNS do HostGator corrigido e validado  
+- Schema `dashboard` criado no Supabase  
+- Tabelas base implantadas: `api_tokens`, `updates_log`  
+- Infraestrutura concluída  
+- Pendências: ingestão e validação OAuth das APIs no Bloco 2  
+
 ---
 
 ## **Sprint 2 – Processamento, Dashboard e UX**  
