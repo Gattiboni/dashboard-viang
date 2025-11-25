@@ -94,6 +94,34 @@ Criar o schema dedicado `dashboard` no Supabase e iniciar sua estrutura base:
 
 ---
 
+### Decisão 009 — 2025-11-19
+
+#### Ajuste de Escopo do MVP: Continuidade com Mercado Livre enquanto Bling e Upseller aguardam autorização
+
+**Contexto**
+Durante a integração das APIs externas, clientes apresentaram dificuldade em concluir o fluxo OAuth do Bling, inviabilizando a coleta imediata desses dados. A dependência direta dessas autorizações criou risco de travamento do cronograma do MVP.
+
+**Decisão**
+Prosseguir o MVP utilizando exclusivamente os dados extraídos do **Mercado Livre**, que já possui tokens ativos e totalmente funcionais no Supabase. A integração com **Bling** e **Upseller** será movida para a próxima etapa do projeto, sem comprometer os dashboards principais e a camada de IA.
+
+**Motivos**
+
+* Evitar bloqueio do projeto por fatores externos (clientes que não completaram OAuth).
+* Garantir entrega do MVP dentro do prazo.
+* As métricas essenciais (vendas, margem, reputação, Ads, SKU performance) já são completamente extraídas do ML.
+* A posterior inclusão de Bling e Upseller não altera a estrutura já criada (views, ETL e schema).
+
+**Impacto**
+
+* O MVP continua funcional e com dados reais.
+* A documentação e o ETL permanecem consistentes com o modelo client‑centric.
+* Bling e Upseller entram como **Bloco 4** ou **Fase 2**, sem retrabalho no que já está pronto.
+
+---
+
+*(Esta entrada deve ser vinculada à próxima versão registrada no ChangeLog.)*
+
+
 
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
