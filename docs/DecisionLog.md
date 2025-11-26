@@ -119,7 +119,37 @@ Prosseguir o MVP utilizando exclusivamente os dados extraídos do **Mercado Livr
 
 ---
 
-*(Esta entrada deve ser vinculada à próxima versão registrada no ChangeLog.)*
+### Decisão 010 — 2025-11-25  
+#### Padronização do Modelo de Autorização Mercado Livre, Saneamento de Tokens, Correção de Schemas e Consolidação dos Clientes
+
+**Contexto**  
+Durante a implementação da integração OAuth com o Mercado Livre, a Edge Function `ml_oauth_callback` apresentou comportamentos inconsistentes devido à ausência de variáveis de ambiente, schema não exposto ao runtime, problemas de permissões e divergências na estrutura de dados do schema `dashboard`.  
+Diversos registros incorretos foram gerados nas tentativas iniciais antes do ajuste completo do fluxo, resultando em duplicações de `client_id`, divergências de `user_id`, registros de teste e inconsistência na identificação dos clientes.  
+Após a correção de todos os componentes do fluxo OAuth (incluindo troca de token, configuração do cliente Supabase e upsert no schema correto), tornou-se necessário consolidar e padronizar todos os registros.
+
+**Decisão**  
+- Expor o schema `dashboard` no Supabase e configurar o cliente com `db: { schema: 'dashboard' }` para garantir acesso consistente.  
+- Corrigir a Edge Function, incluindo: atualização de segredos via CLI, ajuste do callback OAuth, validação dos parâmetros retornados pelo Mercado Livre e ajuste da operação `upsert` com constraint única (`client_id, platform`).  
+- Eliminar registros antigos, inválidos ou originados durante testes (incluindo `client_id` antigos da TOH e Eletrohalen).  
+- Unificar registros duplicados, tomando como verdade os tokens obtidos via autorização real dos clientes.  
+- Corrigir e padronizar `display_name` e `user_id` de todos os clientes, incluindo a formalização da Viang como cliente interno.  
+- Estabelecer um modelo único de identificação para cada cliente, garantindo integridade entre `client_id`, `user_id` e `display_name`.
+
+**Motivos**  
+- Remover ruído e inconsistências deixadas pelo período de implantação.  
+- Garantir que o fluxo OAuth opere exclusivamente com dados válidos.  
+- Preparar a base para o início do ETL e jobs de refresh de token.  
+- Evitar problemas futuros de sincronização e ingestão analítica.  
+- Melhorar rastreabilidade, manutenção e auditoria dos tokens.
+
+**Impacto**  
+- Integração Mercado Livre validada em produção, com fluxo completo operacional.  
+- Estrutura do schema `dashboard` consolidada e sem duplicidades.  
+- Todos os clientes ativos corretamente identificados: Fuji, Ballon Kids, TOH, Eletrohalen e Viang.  
+- Tokens válidos salvos corretamente e prontos para uso no ETL.  
+- Redução significativa de erros futuros nos jobs de atualização de token e no pipeline de ingestão.  
+
+
 
 
 

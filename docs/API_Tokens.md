@@ -114,3 +114,13 @@ Ela continua funcionando como núcleo do fluxo de autenticação, mas agora pass
 - Documento NÃO removeu nada da versão original.  
 - Estrutura está pronta para `vw_clientes`, CRM e expansão futura.
 
+25/11/25
++--------------+------------+--------------------------------------+
+| Nome         | user_id    | client_id                            |
++--------------+------------+--------------------------------------+
+| Fuji         | 154826496  | 20a256b2-a966-4e11-a542-a0d79009d4a0 |
+| Ballon Kids  | 56778908   | 41814fe9-0279-4f48-bfc9-c2e9017edc22 |
+| TOH          | 2963803475 | 82bdb65e-7df0-4c5c-b9a0-655758dbcb39 |
+| Eletrohalen  | 53217863   | 8c6abda1-b7e5-47d4-9299-297f9113e381 |
+| Viang        | 1451879294 | a9a32432-00b0-48a4-9dd8-415e42fb40e0 |
++--------------+------------+--------------------------------------+
