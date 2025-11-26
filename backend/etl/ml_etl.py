@@ -184,9 +184,26 @@ def refresh_ml_token(conn, client_id, refresh_token):
 
         data = resp.json()
         new_access = data.get("access_token")
-        new_refresh = data.get("refresh_token")
+        new_refresh = data.get("refresh_token")  # Pode vir null
         expires_in = data.get("expires_in")
 
+        # Buscar o refresh_token atual se o novo vier null
+        if not new_refresh:
+            log_warn(f"ML devolveu refresh_token NULL para client_id={client_id}. Mantendo o antigo.")
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    select refresh_token 
+                    from dashboard.api_tokens
+                    where client_id = %s
+                    and platform = 'mercado_livre'
+                    """,
+                    (client_id,),
+                )
+                current_refresh = cur.fetchone()[0]
+            new_refresh = current_refresh
+
+        # Agora fazer o update corretamente
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -200,6 +217,7 @@ def refresh_ml_token(conn, client_id, refresh_token):
                 """,
                 (new_access, new_refresh, expires_in, client_id),
             )
+
 
         log_info(f"Refresh ML OK → client_id={client_id}")
         return new_access
