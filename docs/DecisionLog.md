@@ -149,6 +149,89 @@ Após a correção de todos os componentes do fluxo OAuth (incluindo troca de to
 - Tokens válidos salvos corretamente e prontos para uso no ETL.  
 - Redução significativa de erros futuros nos jobs de atualização de token e no pipeline de ingestão.  
 
+---
+
+### Decisão 011 — 2025-11-27  
+#### Adoção de Vite como base do Frontend e Descontinuação do Template Estático
+
+**Contexto**  
+O template adquirido no DashboardPack utiliza HTML/JS estático, sem bundler, sem servidor de desenvolvimento e sem modularidade real. O script `npm run dev` referenciava arquivos inexistentes, confirmando que o template não foi projetado para uso incremental ou integração profissional. Com a evolução prevista do dashboard, necessidade de modularização, integração com componentes reutilizáveis e manutenção futura, tornou-se inviável depender de estrutura estática ou Live Server.
+
+**Decisão**  
+Adotar **Vite** como estrutura oficial do frontend, criando um projeto modular que permita:  
+- Build incremental  
+- Organização por componentes e páginas  
+- Injeção estruturada dos iframes do Metabase  
+- Manutenção e escalabilidade  
+- Deploy limpo para HostGator  
+O template original será migrado para o projeto Vite apenas como base visual (HTML/CSS/JS).
+
+**Motivos**  
+- Evitar arquitetura frágil baseada em HTML estático  
+- Permitir evolução incremental com baixo acoplamento  
+- Reduzir risco de inconsistências ao usar automações de IA  
+- Garantir frontend moderno, sustentável e versionável  
+- Possibilitar reutilização de componentes
+
+**Impacto**  
+- Frontend passa a ser escalável e profissional  
+- Fluxo de desenvolvimento integrado ao VSCode + Codex  
+- Deploy consistente via `/dist`  
+- Template absorvido com segurança  
+- Facilita criação futura de temas, módulos e componentes reutilizáveis
+
+---
+
+### Decisão 012 — 2025-11-27  
+#### Estratégia de Desenvolvimento Guiado por Wireframes + Componentização antes da Automação por IA
+
+**Contexto**  
+O uso de Codex acelera o desenvolvimento, mas gera risco de divergências quando não existem diretrizes claras. Para manter consistência e evitar código improvisado, é necessário estabelecer uma base de design e estrutura antes de pedir qualquer implementação à IA.
+
+**Decisão**  
+Adotar um fluxo estruturado em 3 etapas obrigatórias antes de envolver Codex:  
+1. **Wireframe detalhado** com layout, hierarquia de páginas e estrutura geral.  
+2. **Seleção explícita de componentes** (cards, tabelas, navegação, filtros, etc.).  
+3. **Mapa de integração com Metabase**, listando cada iframe e sua página/alvo.
+
+Somente após isso, Codex é acionado para implementar o código, reduzindo margem de improviso.
+
+**Motivos**  
+- Evitar arquitetura caótica gerada pela IA  
+- Garantir consistência visual e estrutural  
+- Minimizar retrabalho  
+- Facilitar manutenção e evolução futura  
+- Permitir que o Codex execute, não decida
+
+**Impacto**  
+- Fluxo de trabalho claro e previsível  
+- Código limpo e padronizado  
+- Menor risco de inconsistências  
+- Qualquer colaborador futuro conseguirá entender e manter o projeto  
+- Implementações rápidas e seguras
+
+---
+
+### Decisão 013 — 2025-11-27  
+#### Duplicação do Processo de Autorização do Mercado Livre (Reautorizações Forçadas)
+
+**Contexto**  
+Todos os clientes ML enfrentaram erro 403 em `/orders/search` e `/orders/{id}`, mesmo com OAuth correto, refresh funcionando e tokens válidos. Investigação mostrou que o problema é interno ao ML: permissões inconsistentes, escopos ocultos e comportamento não documentado. Enquanto o ticket oficial é analisado, reautorizações podem forçar a sincronização interna de escopos.
+
+**Decisão**  
+Reenviar o fluxo OAuth para todos os clientes (TOH, Fuji, Eletrohalen, Ballon Kids e Viang administrativo), utilizando links oficiais com `state=<client_id>`, após ativar **todas as permissões disponíveis** no painel do app. O objetivo é forçar o ML a atualizar escopos associados ao token.
+
+**Motivos**  
+- Forçar sincronização de permissões internas  
+- Garantir máxima compatibilidade de escopos  
+- Reduzir impacto enquanto o suporte não responde  
+- Preparar o ambiente para ingestão imediata assim que o ML liberar acesso
+
+**Impacto**  
+- Tokens atualizados no Supabase  
+- Possível desbloqueio imediato dos endpoints afetados  
+- Independência temporária de ajustes manuais pelo ML  
+- Processo transparente e seguro para os sellers reautorizantes
 
 
 
