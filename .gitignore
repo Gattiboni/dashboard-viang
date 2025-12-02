@@ -112,9 +112,9 @@ __cache__/
 /diagrams/*.tmp
 /diagrams/*.autosave
 
-# --- DashboardPack Template (somente referência, não versionar) ---
-docs/templates/dashboardpack/
-docs/templates/dashboardpack/**
+# --- AdminDek Template (somente referência, não versionar) ---
+docs/templates/Admindek-VanillaJS-3.1.0/
+docs/templates/Admindek-VanillaJS-3.1.0/**
 
 
 vite.config.js

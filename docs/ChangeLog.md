@@ -100,4 +100,23 @@ Base consolidada e pronta para ingestão de dados.
 
 ---
 
+## v0.9.0 — 2025-12-02
+### Frontend: Seleção e Consolidação das Páginas-Base do Template Admindek
+
+### Adicionado  
+- Registro oficial das páginas-base do template Admindek que serão utilizadas para construir as telas do Dashboard Viang.  
+- Inclusão da decisão técnica correspondente (Decisão 015).
+
+### Alterado  
+- Alinhamento da estrutura do frontend para garantir compatibilidade direta entre o template estático e o projeto Vite Vanilla.  
+- Ajuste do planejamento do Bloco 2 para seguir unicamente as páginas aprovadas.
+
+### Impacto  
+- Redução de retrabalho na migração do template.  
+- Base sólida para componentização, recortes HTML e implementação incremental.  
+- Liberação para o início da implementação da tela Overview.
+
+---
+
+
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

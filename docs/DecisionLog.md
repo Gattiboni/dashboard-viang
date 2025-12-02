@@ -262,6 +262,33 @@ Adotar **Vite Vanilla** como base oficial do frontend.
 
 ---
 
+### Decisão 015 — 2025-12-02
+#### Seleção Oficial das Páginas-Base do Template Admindek para o Frontend do Dashboard Viang
+
+**Contexto**  
+Após consolidação do wireframe v2, análise detalhada das telas disponíveis no template Admindek VanillaJS 3.1.0 e validação visual no demo compilado, tornou-se necessário definir a base estrutural de cada página do frontend. O objetivo é garantir consistência visual, aderência ao layout aprovado e modularidade dentro do projeto Vite Vanilla.
+
+**Decisão**  
+Selecionar oficialmente as seguintes páginas do template como base para o desenvolvimento do frontend:
+
+- **Overview:** `dist/dashboard/analytics.html`  
+- **Clientes:** `dist/table/dt_basic.html`  
+- **Produtos:** `dist/table/tbl_bootstrap.html`  
+- **Financeiro:** `dist/dashboard/finance.html`  
+- **Integração:** `dist/forms/form2_basic.html`  
+- **Logs ETL:** `dist/table/tbl_dt-simple.html`
+
+**Motivos**  
+- São as páginas com estrutura mais neutra, modular e coerente com o wireframe v2.  
+- Evitam páginas temáticas (invoice, CRM, ecommerce) e demos excessivamente complexas.  
+- Possuem o equilíbrio ideal entre simplicidade e potencial de expansão.
+
+**Impacto**  
+- O frontend passa a ter uma base estável, unificada e padronizada.  
+- Reduz risco de retrabalho durante a migração para Vite.  
+- Permite início imediato do Bloco de Implementação das telas.
+
+---
 
 
 
