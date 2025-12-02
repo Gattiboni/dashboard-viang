@@ -111,3 +111,11 @@ __cache__/
 # --- Diagramas e imagens temporárias ---
 /diagrams/*.tmp
 /diagrams/*.autosave
+
+# --- DashboardPack Template (somente referência, não versionar) ---
+docs/templates/dashboardpack/
+docs/templates/dashboardpack/**
+
+
+vite.config.js
+vite.config.ts
