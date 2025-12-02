@@ -81,4 +81,23 @@ Base consolidada e pronta para ingestão de dados.
 
 ---
 
+## v0.8.0 — 2025-12-01  
+### Frontend: Definição da Base Técnica e Preparação para Implementação
+
+### Adicionado  
+- Entrada formal no DecisionLog definindo **Vite Vanilla** como base do frontend.  
+- Diretriz oficial para uso do template DashboardPack sem migração para frameworks.  
+
+### Alterado  
+- Atualização da documentação do frontend para refletir a estrutura Vite Vanilla.  
+- Alinhamento do wireframe v2 com a abordagem de desenvolvimento baseada em HTML/CSS/JS modular via Vite.  
+
+### Impacto  
+- O frontend passa a ter caminho técnico definitivo e compatível com o template adquirido.  
+- Fluxo de implementação dos componentes e páginas liberado para iniciar imediatamente.  
+- Riscos de incompatibilidade com frameworks eliminados.  
+  
+
+---
+
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

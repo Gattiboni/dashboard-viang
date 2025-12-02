@@ -233,6 +233,37 @@ Reenviar o fluxo OAuth para todos os clientes (TOH, Fuji, Eletrohalen, Ballon Ki
 - Independência temporária de ajustes manuais pelo ML  
 - Processo transparente e seguro para os sellers reautorizantes
 
+---
+
+### Decisão 014 — 2025-12-01  
+#### Escolha da Base do Frontend: Vite Vanilla
+
+**Contexto**  
+O projeto adotou um template completo do DashboardPack, composto por HTML, CSS, JS e plugins tradicionais (Bootstrap, jQuery, componentes visuais estáticos). Durante a preparação do frontend, foram analisadas as implicações de implementar o template dentro de Vite Vanilla, Vite + React e Vite + Vue.  
+Considerando a estrutura do template e o wireframe v2 do Dashboard Viang, tornou-se necessário escolher a base técnica definitiva para o desenvolvimento.
+
+**Decisão**  
+Adotar **Vite Vanilla** como base oficial do frontend.
+
+**Motivos**  
+- Compatibilidade total com o template do DashboardPack.  
+- Não há necessidade de migrar componentes estáticos para React/Vue.  
+- Evita reescrita de plugins, eventos de DOM e scripts legados.  
+- Permite build moderno, organização modular e deploy limpo para HostGator.  
+- Mantém alinhamento direto com o wireframe aprovado.  
+- Reduz complexidade e elimina risco de bugs causados por frameworks.
+
+**Impacto**  
+- Estrutura do frontend evoluirá por HTML/CSS/JS modularizado sob o bundler do Vite.  
+- O template permanece íntegro, apenas reorganizado dentro de `/src`.  
+- A camada de rotas, componentes e páginas seguirá o wireframe v2 sem necessidade de adaptações estruturais.  
+- Permite início imediato da implementação dos componentes e páginas.  
+
+
+---
+
+
+
 
 
 
