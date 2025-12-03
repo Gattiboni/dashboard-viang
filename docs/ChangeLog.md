@@ -118,5 +118,23 @@ Base consolidada e pronta para ingestão de dados.
 
 ---
 
+## v0.9.1 — 2025-12-02
+### Metabase: habilitação de incorporação estática e preparação para embeds assinados
+
+### Adicionado
+- Configuração de incorporação estática (iframe) habilitada no Metabase.
+- Variáveis de ambiente para suporte a embed assinado:
+  - `METABASE_SITE_URL`
+  - `METABASE_EMBED_SECRET_KEY`
+
+### Alterado
+- Estratégia de incorporação do Metabase no MVP: embeds passam a ser gerados de forma assinada (JWT) via backend, evitando exposição de segredos no frontend.
+
+### Impacto
+- Liberação do fluxo de mapeamento Metabase → componentes (Bloco 3).
+- Preparação para rota backend responsável por assinar URLs de embed.
+
+
+----
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

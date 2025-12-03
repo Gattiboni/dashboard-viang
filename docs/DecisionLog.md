@@ -290,6 +290,29 @@ Selecionar oficialmente as seguintes páginas do template como base para o desen
 
 ---
 
+### Decisão 016 — 2025-12-02
+#### Metabase: Incorporação Estática (iframe) habilitada e uso de Embeds Assinados (JWT)
+
+**Contexto**  
+Durante o Bloco 3 (Mapeamento Metabase → Componentes), foi identificado que a incorporação via iframe estava desabilitada, impedindo a geração de URLs de embed para painéis do projeto Viang. Para permitir incorporação segura em produção, foi necessário habilitar a incorporação estática e definir uma chave secreta de assinatura.
+
+**Decisão**  
+- Habilitar **Incorporação Estática** (iframe) no Metabase (Admin → Incorporação → Estático).
+- Utilizar **embeds assinados (JWT)** para painéis e perguntas incorporadas pelo frontend.
+- Armazenar a chave de incorporação **somente no backend** via variável de ambiente (`METABASE_EMBED_SECRET_KEY`).
+- Registrar `METABASE_SITE_URL` como base da instância ativa do Metabase.
+
+**Motivos**  
+- Viabiliza incorporação dos painéis no MVP sem reimplementar BI no frontend.
+- Mantém o embed seguro (JWT) sem exposição de segredos no navegador.
+- Permite parametrização futura (cliente/período/SKU) via tokens assinados.
+
+**Impacto**  
+- O frontend passará a consumir embeds do Metabase via URLs assinadas geradas pelo backend.
+- Passa a existir dependência de uma rota/serviço no backend para emissão de tokens de embed.
+- O Bloco 3 pode avançar com coleta e mapeamento dos embeds dos painéis.
+
+---
 
 
 

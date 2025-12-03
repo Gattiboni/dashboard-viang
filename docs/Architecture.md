@@ -38,3 +38,14 @@ O frontend adotará como base visual e estrutural as páginas do template Admind
 - `table/tbl_dt-simple.html` — Logs ETL  
 
 Essas páginas serão recortadas e migradas para o projeto Vite Vanilla em módulos HTML/JS independentes, preservando layout, grid e componentes essenciais. A escolha prioriza neutralidade visual, compatibilidade com Bootstrap e expansão futura com DataTables e ApexCharts.
+
+
+### Metabase Embedding (MVP) — JWT / Incorporação Estática
+
+Para incorporar painéis e perguntas do Metabase no frontend do Dashboard Viang, foi habilitada a **Incorporação Estática (iframe)** no Metabase e adotado o padrão de **embeds assinados (JWT)**.
+
+- O **segredo de assinatura** deve existir **somente no backend** (variável `METABASE_EMBED_SECRET_KEY`).
+- O frontend não deve conter segredos; ele deve consumir URLs já assinadas (emitidas pelo backend).
+- A instância ativa do Metabase deve ser referenciada por `METABASE_SITE_URL`.
+
+Esse modelo permite incorporar painéis com segurança e habilita parametrização futura (cliente/período/SKU) sem expor credenciais no navegador.
