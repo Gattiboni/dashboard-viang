@@ -314,6 +314,35 @@ Durante o Bloco 3 (Mapeamento Metabase → Componentes), foi identificado que a 
 
 ---
 
+### Decisão 017 — 2025-12-11
+#### Ajuste de Escopo do MVP: Manutenção das Abas de Publicidade e Financeiro com Indicador “Em Breve”
+
+**Contexto**  
+A investigação técnica confirmou que a API pública do Mercado Livre não disponibiliza endpoints funcionais para Mercado Ads, tornando inviável integrar dados de publicidade via API no MVP.  
+Paralelamente, a integração com ERPs (Bling / Upseller), necessária para alimentar os dados financeiros completos, também foi adiada para uma fase futura conforme decisões anteriores de escopo.  
+Apesar disso, a arquitetura do frontend e o wireframe do Dashboard Viang já incluem as abas **Publicidade** e **Financeiro**, ancoradas em componentes visuais e fluxos de navegação essenciais para a coerência do produto.
+
+**Decisão**  
+Manter as abas **Publicidade** e **Financeiro** no MVP, preservando o wireframe e a navegação original, porém exibindo um estado explícito de **“Em breve”** até que as respectivas integrações de dados sejam habilitadas:  
+- **Publicidade:** aguardando integração futura via importação externa ou acordo oficial de acesso a dados Ads.  
+- **Financeiro:** aguardando integração com ERP (Bling / Upseller) para cálculo de custos, margem real e indicadores financeiros completos.
+
+Nenhum dado parcial será exibido e nenhuma métrica será inferida; o estado “Em breve” evita ruído visual, previne conclusões incorretas e mantém a coerência do produto.
+
+**Motivos**  
+- Evitar retrabalho desnecessário no frontend e no mapeamento de componentes.  
+- Preservar a estrutura de navegação definida no wireframe v2.  
+- Manter a arquitetura preparada para dados futuros sem que o MVP dependa desses módulos.  
+- Evitar métricas vazias, `NULL` ou enganadoras no Supabase e nas views derivadas.  
+
+**Impacto**  
+- O frontend mantém todas as abas previstas, garantindo consistência da experiência do usuário.  
+- A aba “Publicidade” somente exibirá dados quando houver fonte externa confiável (CSV, data feed ou integração oficial).  
+- A aba “Financeiro” aguardará a integração com ERP prevista para fases posteriores.  
+- O ETL permanece concentrado nos dados públicos e disponíveis do Mercado Livre.  
+- A documentação passa a refletir o estado real do MVP, sem suposições ou lacunas.
+
+---
 
 
 

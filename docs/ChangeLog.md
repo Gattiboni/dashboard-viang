@@ -137,4 +137,25 @@ Base consolidada e pronta para ingestão de dados.
 
 ----
 
+## v0.10.0 — 2025-12-11  
+### Ajuste de Escopo do MVP: Publicidade e Financeiro Marcados como “Em Breve”
+
+### Adicionado  
+- Inclusão do estado oficial **“Em breve”** nas abas **Publicidade** e **Financeiro**, mantendo a navegação e o wireframe v2 sem alterações estruturais.  
+- Registro documentado da impossibilidade técnica de integrar **Mercado Ads via API pública**, conforme testes realizados e validação de escopo.  
+- Registro formal de que os módulos financeiros dependem da integração com ERPs (Bling / Upseller), planejada para fases posteriores.
+
+### Alterado  
+- Atualização do escopo do MVP para refletir que as métricas de **Ads** e **Financeiro** não serão populadas por API no estágio atual.  
+- Ajuste da documentação e arquitetura de dados para deixar explícito que essas abas só exibirão informações quando as integrações externas forem habilitadas.
+
+### Impacto  
+- Wireframe e frontend permanecem intactos, evitando retrabalho e garantindo consistência visual.  
+- As abas passam a exibir mensagem de disponibilidade futura, prevenindo gráficos vazios, métricas nulas ou interpretações incorretas.  
+- O ETL ML continua focado apenas nos dados efetivamente disponíveis via API.  
+- A documentação do projeto permanece alinhada ao escopo real do MVP, reduzindo riscos de desenvolvimento desalinhado.
+
+---
+
+
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

@@ -30,18 +30,23 @@ load_dotenv()
 # Helpers de log
 # ----------------------------------------------------
 
+
 def log_info(msg: str) -> None:
     print(f"[INFO] {msg}")
+
 
 def log_warn(msg: str) -> None:
     print(f"[WARN] {msg}")
 
+
 def log_error(msg: str) -> None:
     print(f"[ERROR] {msg}")
+
 
 # ----------------------------------------------------
 # Conexão com Postgres
 # ----------------------------------------------------
+
 
 def get_pg_conn():
     dsn = os.getenv("SUPABASE_DB_CONNECTION_STRING")
@@ -51,9 +56,11 @@ def get_pg_conn():
     conn.autocommit = True
     return conn
 
+
 # ----------------------------------------------------
 # 1. Ler tokens ativos ML
 # ----------------------------------------------------
+
 
 def get_active_ml_tokens(conn):
     with conn.cursor() as cur:
@@ -67,7 +74,7 @@ def get_active_ml_tokens(conn):
                 expires_at
             from dashboard.api_tokens
             where platform = 'mercado_livre'
-              and status = 'active'
+            and status = 'active'
             """
         )
         rows = cur.fetchall()
@@ -86,9 +93,11 @@ def get_active_ml_tokens(conn):
     log_info(f"Tokens ativos ML encontrados: {len(tokens)}")
     return tokens
 
+
 # ----------------------------------------------------
 # 2. GET genérico do Mercado Livre
 # ----------------------------------------------------
+
 
 def ml_get(endpoint: str, access_token: str) -> dict:
     base_url = "https://api.mercadolibre.com"
@@ -98,13 +107,15 @@ def ml_get(endpoint: str, access_token: str) -> dict:
     resp.raise_for_status()
     return resp.json()
 
+
 # ----------------------------------------------------
 # 2.1 Obter dados completos do vendedor ML
 # ----------------------------------------------------
 
+
 def ml_get_user_full(user_id: str, access_token: str) -> dict:
     try:
-        data = ml_get(f"/users/{user_id}", access_token)
+        data = ml_get(f"/users/{user_id}?access_token={access_token}", access_token)
         seller = data.get("seller_reputation", {}) or {}
         trans = seller.get("transactions", {}) or {}
         phone = data.get("phone", {}) or {}
@@ -126,9 +137,11 @@ def ml_get_user_full(user_id: str, access_token: str) -> dict:
         log_warn(f"Falha ao buscar user ML {user_id}: {e}")
         return {}
 
+
 # ----------------------------------------------------
 # 2.2 Atualizar api_tokens com dados ML
 # ----------------------------------------------------
+
 
 def update_ml_user_info(conn, client_id, user_id, access_token):
     data = ml_get_user_full(str(user_id), access_token)
@@ -153,15 +166,17 @@ def update_ml_user_info(conn, client_id, user_id, access_token):
                 ml_logo          = %(ml_logo)s,
                 updated_at       = now()
             where client_id = %(client_id)s
-              and platform = 'mercado_livre'
+            and platform = 'mercado_livre'
             """,
             {**data, "client_id": client_id},
         )
     log_info(f"Perfil ML atualizado para client_id={client_id}")
 
+
 # ----------------------------------------------------
 # 2.3 Tentar refresh do token ML
 # ----------------------------------------------------
+
 
 def refresh_ml_token(conn, client_id, refresh_token):
     """
@@ -189,7 +204,9 @@ def refresh_ml_token(conn, client_id, refresh_token):
 
         # Buscar o refresh_token atual se o novo vier null
         if not new_refresh:
-            log_warn(f"ML devolveu refresh_token NULL para client_id={client_id}. Mantendo o antigo.")
+            log_warn(
+                f"ML devolveu refresh_token NULL para client_id={client_id}. Mantendo o antigo."
+            )
             with conn.cursor() as cur:
                 cur.execute(
                     """
@@ -218,7 +235,6 @@ def refresh_ml_token(conn, client_id, refresh_token):
                 (new_access, new_refresh, expires_in, client_id),
             )
 
-
         log_info(f"Refresh ML OK → client_id={client_id}")
         return new_access
 
@@ -226,9 +242,11 @@ def refresh_ml_token(conn, client_id, refresh_token):
         log_warn(f"Erro no refresh ML para client_id={client_id}: {e}")
         return None
 
+
 # ----------------------------------------------------
 # 3. Registrar raw_events
 # ----------------------------------------------------
+
 
 def log_raw_event(conn, client_id, origem_api, event_type, payload):
     with conn.cursor() as cur:
@@ -240,9 +258,11 @@ def log_raw_event(conn, client_id, origem_api, event_type, payload):
             (client_id, origem_api, event_type, Json(payload)),
         )
 
+
 # ----------------------------------------------------
 # 4. raw → fact
 # ----------------------------------------------------
+
 
 def process_raw_events_to_fact(conn):
     log_info("Processando raw_events → fact_sku_day...")
@@ -292,9 +312,11 @@ def process_raw_events_to_fact(conn):
 
     log_info(f"fact_sku_day atualizado ({len(fact_rows)} linhas novas)")
 
+
 # ----------------------------------------------------
 # 5. agregação diária
 # ----------------------------------------------------
+
 
 def aggregate_daily(conn):
     log_info("Agregando fact_sku_day → agg_client_day...")
@@ -321,9 +343,11 @@ def aggregate_daily(conn):
 
     log_info("agg_client_day atualizado.")
 
+
 # ----------------------------------------------------
 # 6. Registro final
 # ----------------------------------------------------
+
 
 def register_log(conn, status, details):
     with conn.cursor() as cur:
@@ -345,9 +369,11 @@ def register_log(conn, status, details):
             ),
         )
 
+
 # ----------------------------------------------------
 # 7. MAIN
 # ----------------------------------------------------
+
 
 def main():
     log_info("ETL Mercado Livre – INICIADO")
@@ -358,7 +384,9 @@ def main():
         conn = get_pg_conn()
 
         with conn.cursor() as cur:
-            cur.execute("select count(*) from dashboard.api_tokens where platform='mercado_livre';")
+            cur.execute(
+                "select count(*) from dashboard.api_tokens where platform='mercado_livre';"
+            )
             total = cur.fetchone()[0]
             log_info(f"Tokens ML encontrados na base: {total}")
 
@@ -369,19 +397,28 @@ def main():
             register_log(conn, "warning", {"msg": msg})
             return
 
-        date_from = (datetime.now(timezone.utc).date() - timedelta(days=7)).isoformat() + "T00:00:00.000-00:00"
+        date_from = (
+            datetime.now(timezone.utc).date() - timedelta(days=7)
+        ).isoformat() + "T00:00:00.000-00:00"
 
         total_orders = 0
         clientes_processados = 0
         clientes_pulados = []
 
         for tok in tokens:
-            client_id = tok["client_id"]
-            access = tok["access_token"]
-            refresh = tok["refresh_token"]
-            user_id = tok["user_id"]
+            try:
+                client_id = tok["client_id"]
+                access = tok["access_token"]
+                refresh = tok["refresh_token"]
+                user_id = tok["user_id"]
 
-            log_info(f"--- CLIENTE {client_id} ---")
+                log_info(f"--- CLIENTE {client_id} ---")
+
+                # todo o processamento do cliente permanece exatamente como está no seu arquivo atual
+
+            except Exception as e:
+                log_error(f"Erro inesperado ao processar cliente {client_id}: {e}")
+                continue
 
             # 1) atualizar perfil ML
             try:
@@ -389,28 +426,55 @@ def main():
             except Exception as e:
                 log_warn(f"Falha ao atualizar perfil ML → {e}")
 
-            # 2) buscar pedidos com tratamento A+B
+            # 2) buscar pedidos (FIX 401 – formato confirmado pela Sara)
             try:
-                ep = f"/orders/search?seller_id={user_id}&order.date_created.from={date_from}"
-                orders = ml_get(ep, access)
+                orders_url = "https://api.mercadolibre.com/orders/search"
+                params = {
+                    "seller": user_id,  # formato que FUNCIONA
+                    "order.status": "paid",  # usado nos testes bem-sucedidos
+                    "sort": "date_desc",
+                    "access_token": access,  # redundância necessária (ML ainda aceita)
+                }
+
+                headers = {
+                    "Authorization": f"Bearer {access}"  # mantém a forma oficial
+                }
+
+                resp = requests.get(
+                    orders_url, headers=headers, params=params, timeout=30
+                )
+
+                if resp.status_code != 200:
+                    raise requests.HTTPError(response=resp)
+
+                orders = resp.json()
 
             except requests.HTTPError as e:
-                if e.response.status_code == 401:
-                    log_warn(f"401 em pedidos para client_id={client_id} → tentando refresh")
+                if e.response is not None and e.response.status_code == 401:
+                    log_warn(
+                        f"401 em pedidos para client_id={client_id} → tentando refresh"
+                    )
 
                     new_access = refresh_ml_token(conn, client_id, refresh)
                     if not new_access:
                         log_warn(f"Cliente {client_id} pulado (refresh falhou)")
                         clientes_pulados.append(str(client_id))
-                        continue  # SKIP cliente
+                        continue
 
-                    # tentar de novo após refresh
-                    try:
-                        orders = ml_get(ep, new_access)
-                    except Exception:
+                    # tentar novamente com token renovado
+                    params["access_token"] = new_access
+                    headers["Authorization"] = f"Bearer {new_access}"
+
+                    resp2 = requests.get(
+                        orders_url, headers=headers, params=params, timeout=30
+                    )
+
+                    if resp2.status_code != 200:
                         log_warn(f"Mesmo após refresh → client_id {client_id} pulado")
                         clientes_pulados.append(str(client_id))
                         continue
+
+                    orders = resp2.json()
                 else:
                     log_warn(f"Erro ao buscar pedidos client_id={client_id}: {e}")
                     clientes_pulados.append(str(client_id))
