@@ -9,13 +9,15 @@
 <!-- [Body] Start -->
 
 <body @@bodySetup>
-    @@include('../layouts/layout-vertical.html')
+    @@include('../layouts/layout-vertical-viang.html')
 
     <!-- [ Main Content ] start -->
     <div class="pc-container">
         <div class="pc-content">
-            @@include('../layouts/breadcrumb.html', {'breadcrumb-item': 'Dashboard', 'breadcrumb-item-active':
-            'Analytics'})
+            @@include('./breadcrumb.html', {
+            'breadcrumb-item': 'Clientes',
+            'breadcrumb-item-active': 'Detalhe'
+            })
 
             <!-- [ Main Content ] start -->
             <div class="row">

@@ -14,12 +14,14 @@
 <!-- [Body] Start -->
 
 <body @@bodySetup>
-    @@include('../layouts/layout-vertical.html')
+    @@include('../layouts/layout-vertical-viang.html')
 
     <section class="pc-container">
         <div class="pc-content">
-            @@include('../layouts/breadcrumb.html', {'breadcrumb-item': 'DataTable', 'breadcrumb-item-active': 'Basic
-            Int.'})
+            @@include('../layouts/breadcrumb.html', {
+            'breadcrumb-item': 'Clientes',
+            'breadcrumb-item-active': 'Lista'
+            })
 
             <!-- [ Main Content ] start -->
             <div class="row">
