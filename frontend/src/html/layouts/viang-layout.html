@@ -1,0 +1,22 @@
+@@include('./head-css-root.html')
+
+<body>
+    @@include('./loader.html')
+
+    <!-- Layout Master (vertical) com sidebar e topbar substituídos -->
+    @@include('./layout-vertical.html', {
+    sidebar: 'sidebar-viang.html',
+    topbar: 'topbar-viang.html'
+    })
+
+    <!-- Conteúdo principal do projeto -->
+    <main class="pc-container viang-main">
+        @@include('./breadcrumb.html')
+        @@include('./header-content.html')
+
+        <!-- CONTEÚDO ESPECÍFICO DE CADA PÁGINA VIRÁ AQUI -->
+    </main>
+
+    @@include('./footer-block.html')
+    @@include('./footer-js-root.html')
+</body>
