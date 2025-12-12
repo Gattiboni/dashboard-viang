@@ -18,11 +18,18 @@
         <div class="pc-content">
             @@include('../layouts/breadcrumb.html', {
             'breadcrumb-item': 'Dashboard',
-            'breadcrumb-item-active': 'Visão geral'
+            'breadcrumb-item-active': ''
             })
 
             <!-- [ Main Content ] start -->
             <div class="row">
+                <!-- Page Title (Dashboard Home) -->
+                <div class="col-12">
+                    <div class="page-header-title mb-3">
+                        <h5 class="mb-0">Visão geral</h5>
+                    </div>
+                </div>
+
                 <!-- Placeholder provisório: aqui entra o layout de KPIs / iframes do wireframe -->
                 <div class="col-12">
                     <div class="card">
@@ -39,12 +46,8 @@
                 </div>
             </div>
             <!-- [ Main Content ] end -->
-        </div>
-    </div>
-    <!-- [ Main Content ] end -->
 
-    @@include('../layouts/footer-block.html')
-    @@include('../layouts/footer-js-root.html')
+
 </body>
 <!-- [Body] end -->
 
