@@ -157,5 +157,17 @@ Base consolidada e pronta para ingestão de dados.
 
 ---
 
+## [2025-12-11] Remoção completa do frontend e preparação para reconstrução
+
+**Alteração:**  
+Exclusão total da pasta `frontend` após diagnóstico de estrutura corrompida e pipeline de build inconsistente.
+
+**Motivo:**  
+O frontend acumulava configurações equivocadas, dependências quebradas e ausência de conformidade com o template Admindek. A persistência de falhas tornou mais eficiente reconstruir do zero do que tentar recuperar a versão existente.
+
+**Resultado:**  
+Repositório limpo e pronto para implementação correta do frontend baseado no Admindek original, seguindo a documentação oficial do projeto.
+
+---
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

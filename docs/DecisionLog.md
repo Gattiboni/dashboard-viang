@@ -344,7 +344,18 @@ Nenhum dado parcial será exibido e nenhuma métrica será inferida; o estado �
 
 ---
 
+## [2025-12-11] Reinício completo do Frontend com Admindek original
 
+**Decisão:**  
+A pasta inteira `frontend` do repositório foi removida e o desenvolvimento será reiniciado do zero utilizando o template original do Admindek (dashboardpack.com), respeitando integralmente a documentação oficial tanto do projeto quanto do próprio template.
+
+**Justificativa:**  
+A compilação e estrutura do frontend haviam se tornado irrecuperáveis devido à configuração inadequada, acúmulo de erros persistentes e ausência de alinhamento com a documentação do Admindek. Para garantir modularidade, incrementalidade e evitar retrabalho, adotou-se a recriação limpa e estruturada do frontend, em conformidade com o wireframe e arquitetura oficial do projeto.
+
+**Impacto:**  
+Não afeta Supabase, Metabase ou backend. Permite reconstrução organizada da camada de interface, eliminando ruídos e garantindo alinhamento técnico pleno com as decisões do projeto.
+
+---
 
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*

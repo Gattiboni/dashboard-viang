@@ -1,0 +1,64 @@
+node_modules
+
+# Prevent duplicate folders created by OS or manual copying
+**/[Aa]dmins 2/
+**/[Aa]pplication 2/
+**/[Cc]hart 2/
+**/[Dd]ashboard 2/
+**/[Dd]emo 2/
+**/[Ee]lements 2/
+**/[Ff]orms 2/
+**/[Ll]ayouts 2/
+**/[Oo]ther 2/
+**/[Pp]ages 2/
+**/[Tt]able 2/
+**/[Ww]idget 2/
+
+# Prevent any folders with " 2", " 3", etc. pattern
+**/* 2/
+**/* 3/
+**/* 4/
+**/* copy/
+**/* Copy/
+
+# Prevent extra avatar files beyond avatar-1 to avatar-10
+**/avatar-1[1-9].svg
+**/avatar-[2-9][0-9].svg
+**/avatar-[1-9][0-9][0-9].svg
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Development artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Internal/Development files
+CLAUDE.md
+claude.md
+GITBOOK_SETUP.md
+gitbook_setup.md
+gitbook_setup
+gitbook_setup.*
+*.backup
+*.bak
+dev-*.html
+dev-*.js
+test-*
+.backup/
+
+# Development server plugin (not needed for production)
+plugins/vite-plugin-html-dev-server.js

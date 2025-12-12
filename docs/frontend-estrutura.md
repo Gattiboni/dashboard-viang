@@ -1,102 +1,77 @@
-# Estrutura de Arquivos e Pastas (pré-Codex) — Frontend
+# Estrutura – Criação das Páginas Base do Frontend (VanillaJS + Admindek 3.1.0)
 
-## Objetivo
-Definir fronteiras rígidas para implementação do frontend (Vite + Admindek), evitando criação “inventada” de estrutura, rotas e componentes.
+**Data:** 2025-12-11
+**Responsável:** Gattiboni
 
----
+## Resumo
 
-## Árvore final (travada)
+Registro da criação da espinha dorsal do frontend, com todas as páginas definidas no wireframe v2 e alinhadas à matriz oficial de templates Admindek.
+Arquivos criados em `/src/html/viang/` com nomes padronizados e sem conteúdo inicial.
 
-**Raiz do frontend:** `dashboard-viang/frontend/vite-dashboard/`
+| Ordem | Página (Wireframe)  | Template-base Admindek     |
+| ----- | ------------------- | -------------------------- |
+| 1     | **Dashboard**       | `dashboard/index.html`     |
+| 2     | **Clientes**        | `table/dt_basic.html`      |
+| 3     | **Cliente Detalhe** | `dashboard/analytics.html` |
+| 4     | **Produtos**        | `table/tbl_bootstrap.html` |
+| 5     | **Publicidade**     | `dashboard/analytics.html` |
+| 6     | **Financeiro**      | `dashboard/finance.html`   |
+| 7     | **Config**          | `forms/form2_basic.html`   |
+| 8     | **Logs / ETL**      | `table/tbl_dt-simple.html` |
 
-```text
-src/
-  assets/
-  styles/
-    main.scss
+## Arquivos Criados
 
-  components/
-    metabase-embed/
-      index.js
-      index.scss
+1. **dashboard.html**
+   - **Finalidade:** Página principal com KPIs e visão executiva.
+   - **Template-base futuro:** `dashboard/index.html`
+   - **Status:** Arquivo vazio criado.
 
-  pages/
-    dashboard/        (Overview)
-      index.html
-      index.js
-      index.scss
+2. **clientes.html**
+   - **Finalidade:** Página de listagem de clientes (tabela).
+   - **Template-base futuro:** `table/dt_basic.html`
+   - **Status:** Arquivo vazio criado.
 
-    clientes/
-      index.html
-      index.js
-      index.scss
+3. **cliente-detalhe.html**
+   - **Finalidade:** Drilldown analítico do cliente, com KPIs e dashboards.
+   - **Template-base futuro:** `dashboard/analytics.html`
+   - **Status:** Arquivo vazio criado.
 
-    produtos/
-      index.html
-      index.js
-      index.scss
+4. **produtos.html**
+   - **Finalidade:** Página de performance por produto, ranking e análises.
+   - **Template-base futuro:** `table/tbl_bootstrap.html`
+   - **Status:** Arquivo vazio criado.
 
-    financeiro/
-      index.html
-      index.js
-      index.scss
+5. **publicidade.html**
+   - **Finalidade:** Módulo analítico de anúncios (Ads).
+   - **Template-base futuro:** `dashboard/analytics.html`
+   - **Status:** Arquivo vazio criado.
 
-    integracao/
-      index.html
-      index.js
-      index.scss
+6. **financeiro.html**
+   - **Finalidade:** KPIs financeiros, visão executiva e dashboards Monetários.
+   - **Template-base futuro:** `dashboard/finance.html`
+   - **Status:** Arquivo vazio criado.
 
-    logs-etl/
-      index.html
-      index.js
-      index.scss
+7. **config.html**
+   - **Finalidade:** Integrações, tokens, configurações da conta.
+   - **Template-base futuro:** `forms/form2_basic.html`
+   - **Status:** Arquivo vazio criado.
 
-Padrão de componentes (travado)
+8. **logs.html**
+   - **Finalidade:** Exibição dos registros ETL e rotinas automáticas.
+   - **Template-base futuro:** `table/tbl_dt-simple.html`
+   - 
+status: Arquivo vazio criado.
+d9. *login.html***
+d     Finalidade: Tela de autenticação (simples). Template-base futuro: Template de login nativo do Admindek. Status: Arquivo vazio criado.
+d10. *onboarding.html***
+d     Finalidade: Processo de entrada do cliente, validação e integração. Template-base futuro: Estrutura híbrida (base limpa + includes). Status: Arquivo vazio criado.
 
-/components/<nome>/
-  index.js
-  index.scss
-  index.html   (opcional — somente se houver markup reutilizável)
-Regras:
+## Observações
+- Estrutura flat adotada conforme boas práticas para multi-page Vite + Admindek.
+- Hierarquia UX (`clientes` → `cliente-detalhe`) não implica hierarquia de diretórios.
+e- Nenhum template original foi modificado nesta etapa.
+e- Conteúdos serão inseridos na próxima fase, página por página.
 
-Não renomear pastas/arquivos.
-
-Não mover arquivos.
-
-Todo componente deve expor um ponto de entrada claro (JS).
-
-index.html só existe quando o componente possuir markup próprio reutilizável.
-
----
-
-## Regra de páginas (substitui “placeholders vazios”)
-
-As páginas **não** serão HTML em branco.
-
-Cada página deve:
-
-1. Usar o **esqueleto base do Admindek** (header + sidebar + `pc-container`).
-2. Dentro do `pc-container`, conter **somente 1 container** de embed (sem layout extra inventado).
-
-### Containers padrão (travado)
-
-* Overview (`pages/dashboard/`): `#mb-overview--dashboard`
-* Clientes (`pages/clientes/`): `#mb-clientes--dashboard`
-* Produtos (`pages/produtos/`): `#mb-produtos--dashboard`
-* Financeiro (`pages/financeiro/`): `#mb-financeiro--dashboard`
-* Integração (`pages/integracao/`): `#mb-integracao--dashboard`
-* Logs ETL (`pages/logs-etl/`): `#mb-logs-etl--dashboard`
-
----
-
-## Navegação (sidebar)
-
-* Os links do sidebar devem apontar para as rotas/páginas acima **mesmo que a página ainda só tenha o container do embed**.
-* Não criar rotas extras fora desta lista sem atualização explícita da documentação.
-
----
-
-## Referência de wireframe
-
-* Wireframe v2 deve estar anexado e referenciado nos docs do frontend como fonte oficial de layout/escopo.
-
+## Estado Final
+- ✔️ Estrutura criada com sucesso e alinhada ao wireframe v2.
+e- Pronta para receber os templates-base.
