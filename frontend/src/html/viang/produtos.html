@@ -10,13 +10,15 @@
 <!-- [Body] Start -->
 
 <body @@bodySetup>
-    @@include('../layouts/layout-vertical.html')
+    @@include('../layouts/layout-vertical-viang.html')
 
     <!-- [ Main Content ] start -->
     <section class="pc-container">
         <div class="pc-content">
-            @@include('../layouts/breadcrumb.html', {'breadcrumb-item': 'Table', 'breadcrumb-item-active': 'Bootstrap
-            Table'})
+            @@include('../layouts/breadcrumb.html', {
+            'breadcrumb-item': 'Produtos',
+            'breadcrumb-item-active': 'Geral'
+            })
 
             <!-- [ Main Content ] start -->
             <div class="row">
