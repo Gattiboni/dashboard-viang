@@ -170,4 +170,23 @@ Repositório limpo e pronto para implementação correta do frontend baseado no 
 
 ---
 
+## v0.11.0 — 2025-12-14  
+### Dados: Backfill Pontual de Histórico Mercado Livre (MVP)
+
+### Adicionado  
+- Execução de backfill pontual dos dados do Mercado Livre, cobrindo uma janela fixa de **30 dias**, com o objetivo de restaurar histórico mínimo para análises comparativas no MVP.  
+- Consolidação do histórico inicial nas tabelas factuais do schema `dashboard`, respeitando integralmente o modelo de dados existente.  
+
+### Alterado  
+- Nenhuma alteração estrutural realizada no schema, tabelas, ETL diário ou arquitetura geral do sistema.  
+
+### Impacto  
+- A Home do Dashboard passa a operar com dados históricos suficientes para leitura de tendência e cálculo de deltas por período.  
+- Seletores de período (7 / 30 dias) tornam-se plenamente funcionais desde o MVP.  
+- Valor percebido da ferramenta significativamente ampliado, sem introdução de dívida técnica ou retrabalho futuro.  
+- Arquitetura permanece incremental, modular e alinhada às decisões previamente documentadas.
+
+---
+
+
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

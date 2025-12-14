@@ -357,5 +357,40 @@ Não afeta Supabase, Metabase ou backend. Permite reconstrução organizada da c
 
 ---
 
+### Decisão 018 — 2025-12-14  
+#### Execução de Backfill Pontual (30 dias) para Dados do Mercado Livre no MVP
+
+**Contexto**  
+Durante a fase inicial de ingestão dos dados do Mercado Livre, foi identificado que a API apresentou comportamento divergente da documentação oficial, exigindo ajustes em headers e parâmetros não documentados.  
+Esse cenário atrasou a coleta efetiva e resultou em histórico disponível apenas a partir de poucos dias antes da validação da Home do Dashboard.
+
+Dado o acúmulo de frustrações externas (limitações da API, atrasos de suporte e restrições de escopo já aceitas), tornou-se necessário restaurar o valor percebido do produto no MVP, garantindo uma janela histórica mínima que permita análises comparativas e leitura confiável de performance.
+
+**Decisão**  
+Executar um **backfill pontual e controlado** dos dados do **Mercado Livre**, limitado a uma janela fixa de **30 dias**, abrangendo todas as métricas efetivamente disponibilizadas pela API no escopo atual do MVP.
+
+O backfill será:
+- Executado **uma única vez**, em **14/12/2025**  
+- Restrito exclusivamente aos dados do Mercado Livre  
+- Limitado às tabelas factuais existentes no schema `dashboard`  
+- Implementado de forma **idempotente**, via `upsert`, sem alterar a estrutura do banco  
+- Totalmente separado do fluxo regular de ETL incremental diário  
+
+**Motivos**  
+- Garantir entrega de valor real e imediato no MVP  
+- Permitir uso efetivo dos seletores de período (7 / 30 dias) e cálculo de deltas  
+- Evitar apresentação de dados excessivamente recentes ou incompletos  
+- Mitigar impacto dos atrasos causados por fatores externos ao projeto  
+- Preservar a confiança da usuária final na ferramenta  
+
+**Impacto**  
+- Nenhuma alteração estrutural na arquitetura, schema ou modelo de dados  
+- Nenhuma mudança no fluxo diário de ETL após a execução  
+- A Home do Dashboard passa a refletir um histórico consistente e comparável  
+- Base preparada para evolução incremental (IA, novos módulos) sem retrabalho
+
+---
+
+
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
