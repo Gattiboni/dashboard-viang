@@ -188,5 +188,22 @@ Repositório limpo e pronto para implementação correta do frontend baseado no 
 
 ---
 
+## v1.0.0 — 2025-12-14  
+### Implementação do Backfill para Onboarding de Novos Clientes  
+
+**Adicionado**  
+- Arquivo `ml_etl_backfill_onboarding.py` adicionado ao fluxo de onboarding.  
+- A partir do OAuth do Mercado Livre (ML), o backfill será executado para novos clientes, preenchendo os dados históricos nos últimos 30 dias.
+
+**Alterado**  
+- O fluxo de onboarding foi atualizado para incluir a execução do backfill após o OAuth.  
+- O cliente agora será marcado como "ativo" após a conclusão do backfill e a credencial do cliente será configurada.
+
+**Impacto**  
+- O backfill para novos clientes será integrado automaticamente no processo de onboarding.  
+- Nenhuma modificação nas rotinas do ETL diário foi necessária.  
+- Fluxo de onboarding mais fluido e pronto para clientes com dados históricos.
+
+---
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

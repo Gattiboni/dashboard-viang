@@ -391,6 +391,29 @@ O backfill será:
 
 ---
 
+### Decisão 018 — 2025-12-14
+#### Implementação do Backfill para Onboarding de Novos Clientes
+
+**Contexto**  
+Após a finalização do processo de backfill para clientes existentes, foi necessário criar uma versão separada do ETL para onboarding de novos clientes. Essa decisão visa garantir que cada cliente que entre na plataforma receba um backfill de dados histórico, conforme o fluxo de integração.
+
+**Decisão**  
+- Criar o arquivo `ml_etl_backfill_onboarding.py`, responsável por rodar o backfill específico para novos clientes.  
+- Após o OAuth do Mercado Livre (ML), executar o backfill com o comando:
+  - `python ml_etl_backfill_onboarding.py`
+- O arquivo processará os dados históricos (últimos 30 dias) e populará as tabelas `fact_sku_day`, `agg_client_day` e `raw_events`.
+- O token e os detalhes de cliente serão salvos e o ambiente será configurado com a variável `BACKFILL_CLIENT_ID` para garantir que o backfill seja executado corretamente.
+
+**Motivos**  
+- Criar uma solução escalável e simples para novos clientes, sem impactar os clientes existentes.  
+- Garantir que todos os novos clientes tenham um histórico de dados, mesmo se entrarem em um momento posterior.  
+- Manter a consistência do processo e facilitar a operação de onboarding.
+
+**Impacto**  
+- Cada novo cliente receberá um backfill automaticamente após a configuração do OAuth ML.  
+- Nenhuma modificação no fluxo do ETL diário é necessária, mantendo a arquitetura isolada e modular.
+
+---
 
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
