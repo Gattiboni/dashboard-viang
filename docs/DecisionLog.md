@@ -415,5 +415,29 @@ Após a finalização do processo de backfill para clientes existentes, foi nece
 
 ---
 
+### [2025-12-14] Estratégia de leitura de dados via Views (sem alteração de ETLs)
+
+**Contexto:**  
+Durante a implementação da Home do dashboard, identificou-se que os dados necessários ao MVP já estavam presentes no `raw_events` (Mercado Livre), porém não estavam acessíveis de forma tabular para consumo pelo Metabase e pelo frontend.
+
+**Decisão:**  
+Adotar uma camada de leitura baseada em **views SQL** no Supabase para:
+- Flatten do JSON retornado pelo endpoint `/orders/search` do Mercado Livre
+- Enriquecimento semântico dos dados (SKU, categoria, ticket médio, pedidos por dia, etc.)
+- Evitar qualquer alteração imediata nos ETLs diários e de backfill já validados
+
+**Justificativa:**  
+- Minimiza risco de regressão em ETLs estáveis
+- Permite rápida validação e ajuste incremental
+- Mantém o `raw_events` como fonte de verdade auditável
+- Facilita consumo pelo Metabase e evolução futura (materialized views ou migração para ETL, se necessário)
+
+**Impacto:**  
+- Nenhuma alteração estrutural em backend ou ingestão
+- Liberação imediata de KPIs essenciais do MVP
+- Base sólida para Home agregada (VIANG) e futuras páginas
+
+---
+
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*

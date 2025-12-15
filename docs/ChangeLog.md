@@ -204,6 +204,56 @@ Repositório limpo e pronto para implementação correta do frontend baseado no 
 - Nenhuma modificação nas rotinas do ETL diário foi necessária.  
 - Fluxo de onboarding mais fluido e pronto para clientes com dados históricos.
 
+# Instruções para o Fluxo de Onboarding
+
+## Após a conclusão do OAuth com o Mercado Livre (ML):
+
+- **Salvar token:** Salve o token recebido após a autorização do cliente.
+
+- **Marcar cliente como ativo:** O cliente será marcado como ativo no sistema após a execução do backfill.
+
+## Configuração do ambiente:
+- Configure a variável de ambiente `BACKFILL_CLIENT_ID=<uuid_do_cliente>`.
+
+## Rodar o script de backfill:
+- Execute o comando abaixo para iniciar o processo de backfill para o novo cliente:
+
+```bash
+python ml_etl_backfill_onboarding.py
+```
+
+Esse processo garantirá que os dados históricos dos últimos 30 dias sejam carregados para o cliente no Supabase, populando as tabelas de dados relevantes (`fact_sku_day`, `agg_client_day`, `raw_events`), sem a necessidade de ações manuais.
+
 ---
+
+### [2025-12-14] Views SQL para leitura e enriquecimento de dados Mercado Livre
+
+**Adicionado:**
+- View `vw_ml_order_items_flat`  
+  Flatten dos pedidos do Mercado Livre a partir de `raw_events.payload`, explorando corretamente:
+  - `payload.results[]`
+  - `order_items[]`
+- View `vw_ml_client_day_enriched`  
+  Agregação diária por cliente com métricas derivadas (receita bruta, pedidos, ticket médio)
+- View `vw_ml_viang_day`  
+  Visão executiva agregada da operação (base da Home)
+- View `vw_ml_top_skus`  
+  Ranking de SKUs por unidades vendidas
+- View `vw_ml_category_day`  
+  Agregação por categoria para gráficos e hierarquia de produtos
+
+**Observações:**
+- Nenhuma modificação realizada nos ETLs existentes
+- Views passam a refletir automaticamente dados do ETL diário e dos backfills (inclusive onboarding)
+- Correção aplicada para leitura adequada do JSON do endpoint `/orders/search` (estrutura `results[]`)
+
+**Estado atual:**
+- Dados populados e validados
+- Prontos para consumo no Metabase e frontend
+
+
+---
+
+
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*
