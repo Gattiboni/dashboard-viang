@@ -254,6 +254,32 @@ Esse processo garantirá que os dados históricos dos últimos 30 dias sejam car
 
 ---
 
+## v1.1.0 — 2025-12-15  
+### BI / Metabase: Consolidação da Home do Dashboard (MVP)
+
+### Adicionado  
+- Definição operacional completa da Home do Dashboard Viang no Metabase, utilizando exclusivamente **GUI Questions**, conectadas a um **único filtro global de período** em nível de dashboard.  
+- Criação de ETL dedicado para **categorias do Mercado Livre**, isolado do ETL diário, populando tabela própria e permitindo leitura correta de categorias por nome em vez de código.  
+- Criação de views SQL adicionais no schema `dashboard` para suporte à leitura incremental e enriquecimento sem alterar ETLs existentes.  
+
+### Alterado  
+- Estratégia inicial de KPIs totalmente em SQL foi abandonada em favor de GUI Questions, após validação prática de melhor compatibilidade com embeds e seletor global de período.  
+- Ajuste do escopo da Home para refletir apenas KPIs com fonte de dados validada e comportamento consistente no Metabase.  
+
+### Congelado (MVP)  
+- **Seção 2.3 — Operação & Logística**: congelada após constatação de ausência de eventos confiáveis de despacho físico no payload atual do Mercado Livre.  
+- **Seção 2.4 — Experiência & Reputação**: congelada por inexistência, no banco atual, de dados de reputação e avaliação de anúncios, apesar de endpoints previstos nos tokens OAuth.  
+- **Seção 2.5 — Eficiência Operacional (Alertas Executivos)**: congelada por depender das mesmas bases de dados não disponíveis ou não confiáveis no MVP.  
+
+### Impacto  
+- A Home do Dashboard passa a exibir apenas métricas defensáveis, com dados reais e sem inferências frágeis.  
+- Redução significativa de risco de ruído analítico ou questionamentos por parte de clientes.  
+- Base sólida para evolução futura, permitindo reativação dos blocos congelados assim que novas fontes de dados forem integradas.  
+- Arquitetura de BI alinhada com embeds assinados, seletor global de período e frontend customizado Viang.
+
+---
+
+
 
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

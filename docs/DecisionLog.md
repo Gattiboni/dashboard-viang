@@ -439,5 +439,44 @@ Adotar uma camada de leitura baseada em **views SQL** no Supabase para:
 
 ---
 
+### Decisão 019 — 2025-12-15  
+#### Estratégia Definitiva de KPIs da Home (MVP) e Congelamento de Blocos sem Fonte de Dados Confiável
+
+**Contexto**  
+Durante a implementação da Home do Dashboard Viang no Metabase, foi realizada uma validação rigorosa entre:
+- KPIs definidos no wireframe e planejamento (Seção 2)
+- Views SQL disponíveis no schema `dashboard`
+- Dicionário de dados oficial do projeto
+- Comportamento real do Metabase (GUI Questions, filtros e embeds)
+- Limitações práticas da API do Mercado Livre no payload atual
+
+Testes práticos demonstraram que determinados KPIs planejados dependiam de dados que:
+- Não existem nas views atuais
+- Não podem ser derivados com segurança no Metabase
+- Ou resultariam em métricas enganosas no MVP
+
+**Decisão**  
+1. **Adotar GUI Questions no Metabase como padrão do MVP**, sem SQL Questions, para todos os KPIs cujas métricas já estejam corretamente modeladas nas views do Supabase.  
+2. **Centralizar o controle de período exclusivamente no filtro de dashboard**, conectado ao frontend por meio de embed assinado, sem qualquer filtro de data definido no nível das perguntas.  
+3. **Congelar integralmente a Seção 2.3 — Operação & Logística no MVP**, após tentativa empírica de criação de view logística baseada em `raw_events`, que comprovou ausência de eventos confiáveis de despacho físico no payload atual do Mercado Livre.  
+4. **Congelar integralmente a Seção 2.4 — Experiência & Reputação no MVP**, devido à inexistência, no banco atual, de dados de reputação e avaliação de anúncios, apesar de os tokens OAuth já preverem acesso a esses endpoints.  
+5. **Congelar integralmente a Seção 2.5 — Eficiência Operacional (Alertas Executivos) no MVP**, por depender das mesmas bases de dados inexistentes ou não confiáveis que inviabilizaram as Seções 2.3 e 2.4.  
+6. Manter todas as decisões de congelamento explicitamente documentadas para evitar métricas parciais, placeholders ou KPIs enganosos no dashboard.
+
+**Motivos**  
+- Preservar a credibilidade analítica do MVP.  
+- Evitar exposição de métricas calculadas a partir de proxies inválidos.  
+- Manter aderência estrita ao dicionário de dados e ao modelo real do banco.  
+- Evitar retrabalho futuro causado por decisões apressadas no Metabase.  
+- Garantir que toda métrica exibida no MVP tenha origem clara, rastreável e defensável.
+
+**Impacto**  
+- A Home do Dashboard Viang passa a focar exclusivamente em **Performance & Vendas** e **Produtos**, com dados reais, consistentes e validados.  
+- Operação, Logística, Reputação e Alertas ficam explicitamente planejados para fases posteriores, quando houver ingestão adequada de dados.  
+- A arquitetura permanece incremental, modular e alinhada às premissas originais do projeto.  
+- O frontend mantém estrutura e navegação intactas, sem exibição de KPIs vazios ou enganosos.
+
+---
+
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
