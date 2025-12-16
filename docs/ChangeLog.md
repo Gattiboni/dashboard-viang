@@ -279,6 +279,26 @@ Esse processo garantirá que os dados históricos dos últimos 30 dias sejam car
 
 ---
 
+## v1.2.0 — 2025-12-16  
+### BI / Frontend: Investigação de Spinner Infinito em Embeds do Metabase
+
+### Adicionado  
+- Registro formal da estratégia de **isolamento do embed do Metabase** em micro-frontend dedicado para investigação e padronização.
+- Consolidação empírica dos aprendizados sobre comportamento de static embeds do Metabase em ambientes complexos (templates admin + CSP).
+- Documentação dos limites do embed estático em relação a erros silenciosos de cards, parâmetros obrigatórios e bootstrap interno da SPA do Metabase.
+
+### Alterado  
+- Nenhuma alteração estrutural aplicada ao AdminDek, Vite ou CSP do shell nesta versão.
+- Nenhuma modificação em Metabase, Supabase ou geração de JWT.
+
+### Impacto  
+- O projeto passa a distinguir explicitamente:
+  - **Shell do produto** (AdminDek / Vite)
+  - **Host de embed do Metabase** (micro-frontend dedicado)
+- A fase seguinte de implementação será realizada em branch separada, com foco exclusivo na validação do novo fluxo de embed.
+- Redução significativa do risco de decisões arquiteturais baseadas em sintomas e não em causas reais.
+
+---
 
 
 

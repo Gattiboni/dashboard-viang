@@ -478,5 +478,45 @@ Testes práticos demonstraram que determinados KPIs planejados dependiam de dado
 
 ---
 
+### Decisão 020 — 2025-12-16  
+#### Isolamento do Embed do Metabase em Micro-Frontend Dedicado (Investigação e Padronização)
+
+**Contexto**  
+Durante a implementação da Home do Dashboard Viang via incorporação estática (iframe) do Metabase dentro do template Admindek (Vite Vanilla), foram identificados comportamentos recorrentes de **spinner infinito** no embed, mesmo com todos os pré-requisitos técnicos corretamente configurados (JWT válido, rede funcional, embed habilitado, URL acessível isoladamente).
+
+A investigação empírica e a análise de relatos oficiais (GitHub, Discourse e documentação do Metabase) indicaram que:
+- O frontend do Metabase pode não concluir o bootstrap interno do dashboard em cenários específicos (ex.: erro silencioso em cards, parâmetros obrigatórios ausentes, estados internos de erro não tratados).
+- O ambiente host complexo (template admin + CSP rigorosa + SPA) dificulta o diagnóstico e introduz múltiplas variáveis não relacionadas ao problema real.
+- O “caminho feliz” documentado pelo Metabase para static embedding assume um **host HTML mínimo**, sem interferências de frameworks, templates ou CSP agressiva.
+
+Diante disso, tornou-se necessário reduzir drasticamente o espaço de incerteza, isolando o embed em um ambiente previsível e alinhado às referências oficiais.
+
+**Decisão**  
+Adotar, para a fase de investigação e padronização dos embeds do Metabase, um **micro-frontend dedicado e minimalista**, separado do shell principal (AdminDek), com as seguintes diretrizes:
+
+- O AdminDek permanece como **shell oficial** do produto, responsável por layout, navegação e contexto do usuário.
+- O Metabase **não será mais embutido diretamente** nas páginas do AdminDek durante essa fase.
+- O AdminDek passará a incorporar um iframe interno apontando para um **micro-frontend próprio**, cuja única responsabilidade é renderizar o static embed do Metabase.
+- O micro-frontend utilizará HTML mínimo, CSP controlada e fluxo alinhado aos exemplos oficiais de static embedding do Metabase.
+- A geração de JWT continua sendo responsabilidade do backend (Supabase Edge Functions), sem exposição de segredos no frontend.
+
+Essa decisão **não substitui nem invalida** a arquitetura existente, mas cria uma camada intermediária de isolamento para diagnóstico confiável, repetibilidade e padronização futura.
+
+**Motivos**  
+- Reduzir variáveis externas durante a investigação de falhas de bootstrap do Metabase.
+- Alinhar o ambiente de embed ao “caminho feliz” documentado oficialmente.
+- Facilitar reprodução de bugs relacionados a cards, parâmetros e versões do Metabase.
+- Evitar afrouxamento indevido da CSP ou customizações perigosas no template Admindek.
+- Criar base sólida e repetível para múltiplas páginas de dashboard (Home, Produtos, etc.).
+
+**Impacto**  
+- Nenhuma alteração estrutural imediata no AdminDek, Vite ou CSP do shell.
+- Introdução de um micro-frontend dedicado exclusivamente ao embed do Metabase.
+- Maior observabilidade e previsibilidade do comportamento do embed.
+- Preparação do terreno para padronização dos dashboards sem retrabalho futuro.
+- Documentação e commits subsequentes passarão a distinguir claramente **shell** e **host de embed**.
+
+---
+
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
