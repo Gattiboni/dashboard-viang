@@ -26,8 +26,23 @@
 </head>
 
 <body>
-    <iframe src="__EMBED_URL_DO_METABASE_AQUI__" allowtransparency="true"
-        sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+    <iframe id="metabase-embed" allowtransparency="true" sandbox="allow-scripts allow-same-origin allow-popups">
+    </iframe>
+
+    <script>
+        fetch("https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/metabase-embed-dashboard", {
+            method: "POST"
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("metabase-embed").src = data.embed_url;
+            })
+            .catch(error => {
+                document.body.innerText = "Erro ao carregar dashboard";
+                console.error(error);
+            });
+    </script>
 </body>
+
 
 </html>
