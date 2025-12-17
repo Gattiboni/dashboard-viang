@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<!-- [Head] start -->
+
+<head>
+  @@include('../layouts/head-page-meta.html', {'title': 'Login — Dashboard Viang'})
+  @@include('../layouts/head-css.html')
+</head>
+<!-- [Head] end -->
+<!-- [Body] Start -->
+
+<body @@bodySetup>
+  @@include('../layouts/loader.html')
+  <div class="auth-main">
+    <div class="auth-wrapper v1">
+      <div class="auth-form">
+        <div class="position-relative">
+          <div class="auth-bg">
+            <span class="r"></span>
+            <span class="r s"></span>
+            <span class="r s"></span>
+            <span class="r"></span>
+          </div>
+
+          <div class="card mb-0">
+            <div class="card-body">
+              <div class="text-center">
+                <a href="#">
+                  <img src="../assets/images/viang/logo-viang.svg" alt="Dashboard Viang" />
+                </a>
+              </div>
+
+              <h4 class="text-center f-w-500 mt-4 mb-3">Entrar</h4>
+
+              <!-- Mensagens de erro -->
+              <div id="login-alert" class="alert d-none" role="alert"></div>
+
+              <form id="login-form" novalidate>
+                <div class="mb-3">
+                  <input type="email" class="form-control" id="login-email" placeholder="E-mail" autocomplete="email"
+                    required />
+                </div>
+
+                <div class="mb-3">
+                  <input type="password" class="form-control" id="login-password" placeholder="Senha"
+                    autocomplete="current-password" required />
+                </div>
+
+                <div class="d-flex mt-1 justify-content-between align-items-center">
+                  <div class="form-check">
+                    <input class="form-check-input input-primary" type="checkbox" id="rememberCheck" checked />
+                    <label class="form-check-label text-muted" for="rememberCheck">
+                      Manter conectado
+                    </label>
+                  </div>
+                </div>
+
+                <div class="text-center mt-4">
+                  <button id="btnLogin" type="submit" class="btn btn-primary shadow px-sm-4">
+                    Entrar
+                  </button>
+                </div>
+              </form>
+
+              <div class="d-flex justify-content-between align-items-end mt-4">
+                <h6 class="f-w-500 mb-0">Ainda não tem conta?</h6>
+                <a href="./register-viang.html" class="link-primary">Criar conta</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+  <script>
+    (function () {
+      /* =====================================================
+       *  CONFIG (MVP)
+       * ===================================================== */
+      const SUPABASE_URL = 'https://cbnisuoocsrhdqdpmips.supabase.co';
+      const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+
+      const DASHBOARD_URL = '/dashboard';
+
+      const form = document.getElementById('login-form');
+      const alertEl = document.getElementById('login-alert');
+      const btn = document.getElementById('btnLogin');
+
+      function showAlert(kind, message) {
+        alertEl.className = `alert alert-${kind}`;
+        alertEl.textContent = message;
+        alertEl.classList.remove('d-none');
+      }
+
+      function hideAlert() {
+        alertEl.classList.add('d-none');
+        alertEl.textContent = '';
+      }
+
+      function setLoading(isLoading) {
+        btn.disabled = isLoading;
+        btn.textContent = isLoading ? 'Entrando...' : 'Entrar';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideAlert();
+
+        const email = (document.getElementById('login-email').value || '').trim();
+        const password = document.getElementById('login-password').value || '';
+
+        if (!email) return showAlert('danger', 'Informe seu e-mail.');
+        if (!password) return showAlert('danger', 'Informe sua senha.');
+
+        setLoading(true);
+
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email,
+              password
+            })
+          });
+
+          const payload = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            showAlert(
+              'danger',
+              'Credenciais inválidas ou conta não confirmada.'
+            );
+            return;
+          }
+
+          // sessão válida → redirect
+          window.location.href = DASHBOARD_URL;
+        } catch (err) {
+          showAlert('danger', `Falha ao autenticar: ${String(err)}`);
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();
+  </script>
+
+  @@include('../layouts/footer-js.html')
+  @@include('../layouts/customizer.html')
+</body>
+<!-- [Body] end -->
+
+</html>

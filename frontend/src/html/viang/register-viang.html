@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pt-BR">
+<!-- [Head] start -->
+
+<head>
+  @@include('../layouts/head-page-meta.html', {'title': 'Cadastro — Dashboard Viang'})
+  @@include('../layouts/head-css.html')
+</head>
+<!-- [Head] end -->
+<!-- [Body] Start -->
+
+<body @@bodySetup>
+  @@include('../layouts/loader.html')
+  <div class="auth-main">
+    <div class="auth-wrapper v1">
+      <div class="auth-form">
+        <div class="position-relative">
+          <div class="auth-bg">
+            <span class="r"></span>
+            <span class="r s"></span>
+            <span class="r s"></span>
+            <span class="r"></span>
+          </div>
+
+          <div class="card mb-0">
+            <div class="card-body">
+              <div class="text-center">
+                <a href="#">
+                  <img src="../assets/images/viang/logo-viang.svg" alt="Dashboard Viang" />
+                </a>
+              </div>
+
+              <h4 class="text-center f-w-500 mt-4 mb-3">Criar conta</h4>
+
+              <!-- Mensagens (erro/sucesso) -->
+              <div id="signup-alert" class="alert d-none" role="alert"></div>
+
+              <form id="signup-form" novalidate>
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <input type="text" class="form-control" id="firstName" placeholder="Nome"
+                        autocomplete="given-name" />
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <input type="text" class="form-control" id="lastName" placeholder="Sobrenome"
+                        autocomplete="family-name" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <input type="email" class="form-control" id="email" placeholder="E-mail" autocomplete="email"
+                    required />
+                </div>
+
+                <div class="mb-3">
+                  <input type="password" class="form-control" id="password" placeholder="Senha"
+                    autocomplete="new-password" required />
+                </div>
+
+                <div class="mb-3">
+                  <input type="password" class="form-control" id="passwordConfirm" placeholder="Confirmar senha"
+                    autocomplete="new-password" required />
+                </div>
+
+                <div class="d-flex mt-1 justify-content-between">
+                  <div class="form-check">
+                    <input class="form-check-input input-primary" type="checkbox" id="termsCheck" checked />
+                    <label class="form-check-label text-muted" for="termsCheck">
+                      Concordo com os Termos e Condições
+                    </label>
+                  </div>
+                </div>
+
+                <div class="text-center mt-4">
+                  <button id="btnSignup" type="submit" class="btn btn-primary shadow px-sm-4">
+                    Criar conta
+                  </button>
+                </div>
+              </form>
+
+              <div class="d-flex justify-content-between align-items-end mt-4">
+                <h6 class="f-w-500 mb-0">Já tem uma conta?</h6>
+                <a href="#" class="link-primary">Entrar</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+  <script>
+    (function () {
+      /* =====================================================
+       *  CONFIG (MVP)
+       *  - usar ANON KEY no frontend (ok)
+       *  - NÃO usar service_role no navegador
+       * ===================================================== */
+      const SUPABASE_URL = 'https://cbnisuoocsrhdqdpmips.supabase.co';
+      const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+
+      // TODO: trocar quando subir no HostGator (você pediu pra deixar pronto e trocar depois)
+      const EMAIL_REDIRECT_TO = 'https://SEU_DOMINIO/dashboard-viang/login';
+
+      const form = document.getElementById('signup-form');
+      const alertEl = document.getElementById('signup-alert');
+      const btn = document.getElementById('btnSignup');
+
+      function showAlert(kind, message) {
+        // kind: 'success' | 'danger' | 'warning' | 'info'
+        alertEl.className = `alert alert-${kind}`;
+        alertEl.textContent = message;
+        alertEl.classList.remove('d-none');
+      }
+
+      function hideAlert() {
+        alertEl.classList.add('d-none');
+        alertEl.textContent = '';
+      }
+
+      function setLoading(isLoading) {
+        btn.disabled = isLoading;
+        btn.textContent = isLoading ? 'Criando...' : 'Criar conta';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideAlert();
+
+        const firstName = (document.getElementById('firstName').value || '').trim();
+        const lastName = (document.getElementById('lastName').value || '').trim();
+        const email = (document.getElementById('email').value || '').trim();
+        const password = document.getElementById('password').value || '';
+        const passwordConfirm = document.getElementById('passwordConfirm').value || '';
+        const termsOk = document.getElementById('termsCheck').checked;
+
+        if (!email) return showAlert('danger', 'Informe seu e-mail.');
+        if (!password) return showAlert('danger', 'Informe sua senha.');
+        if (password !== passwordConfirm) return showAlert('danger', 'As senhas não conferem.');
+        if (!termsOk) return showAlert('danger', 'Você precisa aceitar os Termos e Condições.');
+
+        /* =====================================================
+         *  Validação de domínio — UX apenas
+         *  (segurança é no backend, aqui é feedback imediato)
+         * ===================================================== */
+        const allowedDomain = '@viang.com.br';
+        const isMaster = email.toLowerCase() === 'alangattiboni@gmail.com';
+
+        if (!isMaster && !email.toLowerCase().endsWith(allowedDomain)) {
+          return showAlert(
+            'warning',
+            'Somente e-mails do domínio @viang.com.br podem se cadastrar.'
+          );
+        }
+
+
+        setLoading(true);
+
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email,
+              password,
+              options: {
+                emailRedirectTo: EMAIL_REDIRECT_TO,
+                data: {
+                  first_name: firstName || null,
+                  last_name: lastName || null
+                }
+              }
+            })
+          });
+
+          const payload = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            const msg =
+              payload?.msg ||
+              payload?.error_description ||
+              payload?.error ||
+              'Erro ao criar conta (verifique os dados e tente novamente).';
+            showAlert('danger', msg);
+            return;
+          }
+
+          // Quando confirmação por e-mail está habilitada, o normal é o usuário ficar "pendente"
+          showAlert(
+            'success',
+            'Cadastro iniciado. Enviamos um e-mail de confirmação. Abra o e-mail e clique no link para ativar sua conta.'
+          );
+
+          form.reset();
+          document.getElementById('termsCheck').checked = true;
+        } catch (err) {
+          showAlert('danger', `Falha de rede ao falar com o Supabase: ${String(err)}`);
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();
+  </script>
+
+  @@include('./layouts/footer-js.html') @@include('./layouts/customizer.html')
+</body>
+<!-- [Body] end -->
+
+</html>

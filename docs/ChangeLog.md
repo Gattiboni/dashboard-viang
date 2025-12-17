@@ -340,6 +340,36 @@ Esse processo garantirá que os dados históricos dos últimos 30 dias sejam car
 
 ---
 
+## v1.4.0 — 2025-12-17  
+### Autenticação & Acesso (MVP)
 
+### Adicionado  
+- Implementação completa do fluxo de **cadastro e login** utilizando Supabase Auth (Email + Password).  
+- Criação das páginas dedicadas:
+  - `login-viang.html`
+  - `register-viang.html`
+  ambas baseadas estritamente nos templates oficiais do Admindek, com ajustes mínimos e localizados.  
+- Ativação de **confirmação obrigatória por e-mail** no Supabase Auth, bloqueando login antes da validação do usuário.  
+- Implementação de **Auth Hook (pre-signup)** via Edge Function no Supabase para:
+  - validação de domínio permitido (`@viang.com.br`)
+  - exceção explícita para conta master  
+- Criação da tabela `dashboard.users` para consolidação futura de permissões, hierarquia e status de conta, mantendo separação clara entre Auth e domínio da aplicação.  
+- Definição e marcação da **master account** via flag explícita em tabela (`is_master`), sem impacto no fluxo MVP.  
+
+### Frontend  
+- Integração direta com Supabase Auth via **anon key**, sem exposição de segredos sensíveis.  
+- Tratamento de erros de login e cadastro com mensagens formatadas para rastreabilidade.  
+- Implementação de validação **UX-only** de domínio no frontend, sem qualquer papel de segurança.  
+
+### Pendente (pós-HostGator)  
+- Validação efetiva de sessão ativa em páginas internas (session guard).  
+- Redirecionamento automático para login quando não houver sessão válida, dependente de domínio final e cookies reais de produção.
+
+### Impacto  
+- Fluxo de autenticação do MVP fechado de ponta a ponta, com segurança centralizada no Supabase e frontend mínimo, previsível e rastreável.  
+- Nenhuma dependência de framework adicional ou lógica duplicada.  
+- Base preparada para evolução futura de permissões sem retrabalho.
+
+---
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

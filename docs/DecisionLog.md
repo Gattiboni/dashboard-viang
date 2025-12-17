@@ -575,4 +575,40 @@ Abandonar completamente o Metabase como runtime da **Home do Dashboard** e adota
 
 ---
 
+### Decisão 022 — 2025-12-17  
+#### Arquitetura de Autenticação do MVP baseada integralmente no Supabase Auth
+
+**Contexto**  
+Com a reconstrução do frontend em conformidade estrita ao template Admindek e a necessidade de um fluxo de acesso simples, seguro e sustentável, tornou-se necessário definir uma abordagem definitiva para autenticação de usuários no MVP do Dashboard Viang.
+
+O projeto exige:
+- Confirmação obrigatória de e-mail  
+- Restrição de domínio para novos cadastros  
+- Ausência de retrabalho futuro ao evoluir permissões e hierarquias  
+- Mínima lógica customizada no frontend  
+
+**Decisão**  
+Adotar o **Supabase Auth** como solução única e definitiva de autenticação no MVP, com as seguintes diretrizes:
+
+- Uso exclusivo de **Email + Password**.  
+- Confirmação obrigatória por e-mail antes de qualquer login.  
+- Validação de domínio permitida implementada no **backend**, via Auth Hook (`pre-signup`) em Edge Function.  
+- Exceção explícita para conta master controlada por regra clara e auditável.  
+- Criação de tabela própria (`dashboard.users`) para representar o domínio da aplicação, sem acoplamento direto ao schema `auth`.  
+- Frontend utilizando apenas **anon key**, sem lógica sensível ou segredos expostos.  
+
+**Motivos**  
+- Supabase Auth já resolve autenticação, sessão e segurança melhor do que qualquer implementação customizada no MVP.  
+- Separar Auth (identidade) de domínio da aplicação evita dependência estrutural e facilita evolução futura.  
+- Hooks permitem enforcement real de regras sem duplicação frágil no frontend.  
+- Evita retrabalho ao introduzir permissões, planos ou múltiplos níveis hierárquicos no futuro.
+
+**Impacto**  
+- Fluxo de login e cadastro fechado, previsível e testável.  
+- Segurança centralizada e auditável no backend.  
+- Frontend simples, determinístico e alinhado ao MVP congelado.  
+- Sessão e proteção de rotas planejadas conscientemente para ativação em produção (HostGator), sem dívida técnica.
+
+---
+
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
