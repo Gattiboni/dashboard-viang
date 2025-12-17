@@ -3,7 +3,7 @@
 <!-- [Head] start -->
 
 <head>
-    @@include('../layouts/head-page-meta.html', {'title': 'Bootstrap Basic Table'})
+    @@include('../layouts/head-page-meta.html', {'title': 'Produtos'})
     @@include('../layouts/head-css.html')
 </head>
 <!-- [Head] end -->
@@ -17,276 +17,204 @@
         <div class="pc-content">
             @@include('../layouts/breadcrumb.html', {
             'breadcrumb-item': 'Produtos',
-            'breadcrumb-item-active': 'Geral'
+            'breadcrumb-item-active': ''
             })
+
+            <!-- Page Title (Produtos) -->
+            <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="page-header-title">
+                        <h5 class="mb-0">Produtos</h5>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Período">
+                            <button type="button" class="btn btn-outline-primary" data-period="7d">
+                                7 dias
+                            </button>
+                            <button type="button" class="btn btn-outline-primary active" data-period="30d">
+                                30 dias
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" data-period="90d">
+                                90 dias
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- [ Main Content ] start -->
             <div class="row">
-                <!-- [ basic-table ] start -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Basic Table</h5>
-                            <span class="d-block m-t-5">use class <code>table</code> inside table element</span>
-                        </div>
-                        <div class="card-body table-border-style">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th>Username</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>1</td>
-                                            <td>Mark</td>
-                                            <td>Otto</td>
-                                            <td>@mdo</td>
-                                        </tr>
-                                        <tr>
-                                            <td>2</td>
-                                            <td>Jacob</td>
-                                            <td>Thornton</td>
-                                            <td>@fat</td>
-                                        </tr>
-                                        <tr>
-                                            <td>3</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                <!-- CARD — Maior queda de vendas por produto -->
+                <div class="col-xl-3 col-lg-4 col-md-12">
+                    <div class="card kpi-elevated">
+                        <div class="card-body d-flex flex-column justify-content-center py-4">
+
+                            <!-- Título -->
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <p class="mb-0 text-muted fw-bold">
+                                    Maior queda de vendas
+                                </p>
+                                <i class="ti ti-trending-down text-danger"></i>
                             </div>
+
+                            <!-- Valor principal -->
+                            <div class="text-center">
+                                <h1 id="kpi-pior-queda-valor" class="mb-0 text-danger display-4">
+                                    —
+                                </h1>
+                            </div>
+
+                            <!-- Subtexto -->
+                            <div class="text-center mt-2">
+                                <p id="kpi-pior-queda-label" class="mb-0 text-muted f-12">
+                                    —
+                                </p>
+                            </div>
+
+                            <!-- Barra de severidade -->
+                            <div class="progress mt-3" style="height: 6px;">
+                                <div id="kpi-pior-queda-bar" class="progress-bar" role="progressbar" style="width: 0%">
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
-                <!-- [ basic-table ] end -->
-                <!-- [ Hover-table ] start -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Hover Table</h5>
-                            <span class="d-block m-t-5">use class <code>table-hover</code> inside table element</span>
-                        </div>
-                        <div class="card-body table-border-style">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th>Username</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>1</td>
-                                            <td>Mark</td>
-                                            <td>Otto</td>
-                                            <td>@mdo</td>
-                                        </tr>
-                                        <tr>
-                                            <td>2</td>
-                                            <td>Jacob</td>
-                                            <td>Thornton</td>
-                                            <td>@fat</td>
-                                        </tr>
-                                        <tr>
-                                            <td>3</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Hover-table ] end -->
-                <!-- [ dark-table ] start -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Dark Table</h5>
-                            <span class="d-block m-t-5">use class <code>table-dark</code> inside table element</span>
-                        </div>
-                        <div class="card-body table-border-style">
-                            <div class="table-responsive">
-                                <table class="table table-dark">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th>Username</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>1</td>
-                                            <td>Mark</td>
-                                            <td>Otto</td>
-                                            <td>@mdo</td>
-                                        </tr>
-                                        <tr>
-                                            <td>2</td>
-                                            <td>Jacob</td>
-                                            <td>Thornton</td>
-                                            <td>@fat</td>
-                                        </tr>
-                                        <tr>
-                                            <td>3</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ dark-table ] end -->
-                <!-- [ stiped-table ] start -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Striped Table</h5>
-                            <span class="d-block m-t-5">use class <code>table-striped</code> inside table element</span>
-                        </div>
-                        <div class="card-body table-border-style">
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th>Username</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>1</td>
-                                            <td>Mark</td>
-                                            <td>Otto</td>
-                                            <td>@mdo</td>
-                                        </tr>
-                                        <tr>
-                                            <td>2</td>
-                                            <td>Jacob</td>
-                                            <td>Thornton</td>
-                                            <td>@fat</td>
-                                        </tr>
-                                        <tr>
-                                            <td>3</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ stiped-table ] end -->
-                <!-- [ Contextual-table ] start -->
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Contextual Classes</h5>
-                            <span class="d-block m-t-5">For Make row Contextual add Contextual class like
-                                <code>.table-success</code> in <code> tr tag</code> and For cell add
-                                Contextual class in <code> td or th tag</code> .</span>
-                        </div>
-                        <div class="card-body table-border-style">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th>Username</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="table-active">
-                                            <td>1</td>
-                                            <td>Mark</td>
-                                            <td>Otto</td>
-                                            <td>@mdo</td>
-                                        </tr>
-                                        <tr>
-                                            <td>2</td>
-                                            <td>Jacob</td>
-                                            <td>Thornton</td>
-                                            <td>@fat</td>
-                                        </tr>
-                                        <tr class="table-success">
-                                            <td>3</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                        <tr>
-                                            <td>4</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                        <tr class="table-warning">
-                                            <td>5</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                        <tr>
-                                            <td>6</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                        <tr class="table-danger">
-                                            <td>7</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                        <tr>
-                                            <td>8</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                        <tr class="table-info">
-                                            <td>9</td>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Contextual-table ] end -->
+
             </div>
+
             <!-- [ Main Content ] end -->
         </div>
     </section>
     <!-- [ Main Content ] end -->
-    @@include('../layouts/footer-block.html') @@include('../layouts/footer-js.html')
-    @@include('../layouts/customizer.html')
+    <script>
+        (function () {
+
+            /* =====================================================
+             *  ESTADO GLOBAL DE PERÍODO
+             * ===================================================== */
+            window.DASHBOARD_PERIOD = {
+                type: 'preset',
+                preset: '30d',
+                start_date: null,
+                end_date: null
+            };
+
+            function setActivePresetButton(preset) {
+                document.querySelectorAll('[data-period]').forEach(btn => {
+                    btn.classList.toggle(
+                        'active',
+                        btn.getAttribute('data-period') === preset
+                    );
+                });
+            }
+
+            function setPreset(preset) {
+                window.DASHBOARD_PERIOD = {
+                    type: 'preset',
+                    preset,
+                    start_date: null,
+                    end_date: null
+                };
+
+                setActivePresetButton(preset);
+                updatePeriodBadges();
+                reloadAll();
+            }
+
+            function getPeriodBadgeText() {
+                const p = window.DASHBOARD_PERIOD;
+                if (!p) return '';
+
+                const map = {
+                    '7d': '7 dias',
+                    '30d': '30 dias',
+                    '90d': '90 dias'
+                };
+
+                return `Período: ${map[p.preset] || p.preset}`;
+            }
+
+            function updatePeriodBadges() {
+                const txt = getPeriodBadgeText();
+                document.querySelectorAll('[data-period-badge]').forEach(el => {
+                    el.textContent = txt;
+                });
+            }
+
+            /* =====================================================
+             *  CONTROLES
+             * ===================================================== */
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const preset = this.getAttribute('data-period');
+                    setPreset(preset);
+                });
+            });
+
+            /* =====================================================
+             *  STUB TEMPORÁRIO
+             * ===================================================== */
+
+            async function loadPiorQuedaProdutoSemana() {
+                try {
+                    const rows = await postJSON(
+                        'alerts-pior-queda-produtos',
+                        window.DASHBOARD_PERIOD
+                    );
+
+                    if (!rows || !rows.length) return;
+
+                    const r = rows[0];
+
+                    const delta = Number(r.delta_volume || 0);
+                    const anterior = Math.max(Number(r.quantidade_semana_anterior || 0), 1);
+                    const pct = Math.min(100, Math.abs(delta) / anterior * 100);
+
+                    // ELEMENTOS
+                    const elValor = document.querySelector('#kpi-pior-queda-valor');
+                    const elLabel = document.querySelector('#kpi-pior-queda-label');
+                    const elBar = document.querySelector('#kpi-pior-queda-bar');
+
+                    if (!elValor || !elLabel || !elBar) return;
+
+                    // TEXTO
+                    elValor.textContent = delta;
+                    elLabel.textContent = `${r.product_title} — ${r.seller_name}`;
+
+                    // BARRA
+                    elBar.style.width = `${pct.toFixed(0)}%`;
+
+                    // COR (AdminDek via RGBA)
+                    let color;
+
+                    if (pct <= 5) {
+                        color = 'rgba(16, 185, 129, 0.25)'; // success pastel
+                    } else if (pct <= 10) {
+                        color = 'rgba(245, 158, 11, 0.35)'; // warning pastel
+                    } else {
+                        const alpha = Math.min(1, 0.4 + (pct - 10) / 90 * 0.6);
+                        color = `rgba(239, 68, 68, ${alpha.toFixed(2)})`; // danger progressivo
+                    }
+
+                    elBar.style.backgroundColor = color;
+
+                } catch (e) {
+                    console.error('[Card Pior Queda Produto]', e);
+                }
+            }
+
+
+            function reloadAll() {
+                loadPiorQuedaProdutoSemana();
+            }
+
+            setActivePresetButton('30d');
+
+        })();
+    </script>
+
 </body>
 <!-- [Body] end -->
 
