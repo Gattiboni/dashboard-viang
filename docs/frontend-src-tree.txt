@@ -1,0 +1,749 @@
+﻿Folder PATH listing
+Volume serial number is 00000077 07FB:1176
+D:\BACKUP C 256\DESKTOP\GATTIBONI ENTERPRISES\ALINE VIANNA\DASHBOARD-VIANG\FRONTEND\SRC
+|   landing.js
+|   main.js
+|   style-preset.js
+|   style.js
+|   uikit.js
+|   
++---assets
+|   +---fonts
+|   |   |   tabler-icons.min.css
+|   |   |   
+|   |   +---phosphor
+|   |   |   \---regular
+|   |   |           Phosphor.svg
+|   |   |           Phosphor.ttf
+|   |   |           Phosphor.woff
+|   |   |           Phosphor.woff2
+|   |   |           selection.json
+|   |   |           style.css
+|   |   |           
+|   |   \---tabler
+|   |           tabler-icons.ttf
+|   |           tabler-icons.woff
+|   |           tabler-icons.woff2
+|   |           
+|   +---images
+|   |   |   apple-touch-icon.png
+|   |   |   favicon.svg
+|   |   |   logo-dark.svg
+|   |   |   logo-white.svg
+|   |   |   site.webmanifest
+|   |   |   
+|   |   +---admin
+|   |   |       business.svg
+|   |   |       free.svg
+|   |   |       img-add-user.png
+|   |   |       img-bootstrap.svg
+|   |   |       img-c.svg
+|   |   |       img-course-1.png
+|   |   |       img-course-2.png
+|   |   |       img-course-3.png
+|   |   |       img-course-4.png
+|   |   |       img-course-5.png
+|   |   |       img-course-6.png
+|   |   |       img-course-7.png
+|   |   |       img-course-8.png
+|   |   |       img-domain.png
+|   |   |       img-payment-1.png
+|   |   |       img-payment-2.png
+|   |   |       img-php.svg
+|   |   |       img-star.png
+|   |   |       img-ux.svg
+|   |   |       img-web.svg
+|   |   |       p1.jpg
+|   |   |       p2.jpg
+|   |   |       p3.jpg
+|   |   |       p4.jpg
+|   |   |       p5.jpg
+|   |   |       pro.svg
+|   |   |       regular.svg
+|   |   |       
+|   |   +---application
+|   |   |       card.png
+|   |   |       img-cal-bg.jpg
+|   |   |       img-coupon-1.png
+|   |   |       img-coupon-2.png
+|   |   |       img-coupon.png
+|   |   |       img-empty-mail.png
+|   |   |       img-event-bg.jpg
+|   |   |       img-file-ai.svg
+|   |   |       img-file-doc.svg
+|   |   |       img-file-img.svg
+|   |   |       img-file-imgview.jpg
+|   |   |       img-file-pdf.svg
+|   |   |       img-file-ppt.svg
+|   |   |       img-file-rar.svg
+|   |   |       img-file-txt.svg
+|   |   |       img-file-xls.svg
+|   |   |       img-gallery-1.jpg
+|   |   |       img-gallery-2.jpg
+|   |   |       img-gallery-3.jpg
+|   |   |       img-gallery-4.jpg
+|   |   |       img-gallery-5.jpg
+|   |   |       img-gallery-6.jpg
+|   |   |       img-gallery-7.jpg
+|   |   |       img-gallery-8.jpg
+|   |   |       img-pay-card-bg.png
+|   |   |       img-post-1.jpg
+|   |   |       img-post-2.jpg
+|   |   |       img-post-3.jpg
+|   |   |       img-post-4.jpg
+|   |   |       img-post-5.jpg
+|   |   |       img-post-6.jpg
+|   |   |       img-prod-1.jpg
+|   |   |       img-prod-2.jpg
+|   |   |       img-prod-3.jpg
+|   |   |       img-prod-4.jpg
+|   |   |       img-prod-5.jpg
+|   |   |       img-prod-6.jpg
+|   |   |       img-prod-7.jpg
+|   |   |       img-prod-8.jpg
+|   |   |       img-profile-cover.jpg
+|   |   |       img-story-1.jpg
+|   |   |       img-story-2.jpg
+|   |   |       img-story-3.jpg
+|   |   |       img-story-4.jpg
+|   |   |       img-story-5.jpg
+|   |   |       img-story-6.jpg
+|   |   |       mastercard.png
+|   |   |       paypal.png
+|   |   |       visa.png
+|   |   |       
+|   |   +---authentication
+|   |   |       img-auth-bg-2.jpg
+|   |   |       img-auth-bg-3.jpg
+|   |   |       img-auth-bg-5.jpg
+|   |   |       lock.png
+|   |   |       user.png
+|   |   |       
+|   |   +---component
+|   |   |       img-card.jpg
+|   |   |       img-slide-1.jpg
+|   |   |       img-slide-2.jpg
+|   |   |       img-slide-3.jpg
+|   |   |       
+|   |   +---customizer
+|   |   |       caption-off.svg
+|   |   |       caption-on.svg
+|   |   |       fixed.svg
+|   |   |       full.svg
+|   |   |       ltr.svg
+|   |   |       rtl.svg
+|   |   |       
+|   |   +---gallery-grid
+|   |   |       img-grd-gal-1.jpg
+|   |   |       img-grd-gal-2.jpg
+|   |   |       img-grd-gal-3.jpg
+|   |   |       img-grd-gal-4.jpg
+|   |   |       img-grd-gal-5.jpg
+|   |   |       img-grd-gal-6.jpg
+|   |   |       masonry-1.jpg
+|   |   |       masonry-2.jpg
+|   |   |       masonry-3.jpg
+|   |   |       masonry-4.jpg
+|   |   |       masonry-5.jpg
+|   |   |       masonry-6.jpg
+|   |   |       masonry-7.jpg
+|   |   |       masonry-8.jpg
+|   |   |       
+|   |   +---landing
+|   |   |       app-1.png
+|   |   |       app-10.png
+|   |   |       app-11.png
+|   |   |       app-12.png
+|   |   |       app-2.png
+|   |   |       app-3.png
+|   |   |       app-4.png
+|   |   |       app-5.png
+|   |   |       app-6.png
+|   |   |       app-7.png
+|   |   |       app-8.png
+|   |   |       app-9.png
+|   |   |       client-crystal-1.svg
+|   |   |       client-eagames.svg
+|   |   |       client-haswent-2.svg
+|   |   |       client-vodafone.svg
+|   |   |       collapsed.jpg
+|   |   |       ct-logo-white.svg
+|   |   |       horizontal.jpg
+|   |   |       img-counter-bg.svg
+|   |   |       img-header-main.jpg
+|   |   |       img-title-line.svg
+|   |   |       img-w-1.png
+|   |   |       img-w-2.png
+|   |   |       img-w-3.png
+|   |   |       img-w-4.png
+|   |   |       img-w-main.png
+|   |   |       img-wave.svg
+|   |   |       layout-2.jpg
+|   |   |       layout-3.jpg
+|   |   |       tab.jpg
+|   |   |       vertical.jpg
+|   |   |       
+|   |   +---light-box
+|   |   |       l1.jpg
+|   |   |       l2.jpg
+|   |   |       l3.jpg
+|   |   |       l4.jpg
+|   |   |       l5.jpg
+|   |   |       l6.jpg
+|   |   |       sl1.jpg
+|   |   |       sl2.jpg
+|   |   |       sl3.jpg
+|   |   |       sl4.jpg
+|   |   |       sl5.jpg
+|   |   |       sl6.jpg
+|   |   |       
+|   |   +---notification
+|   |   |       clock-48.png
+|   |   |       high_priority-48.png
+|   |   |       medium_priority-48.png
+|   |   |       ok-48.png
+|   |   |       survey-48.png
+|   |   |       
+|   |   +---pages
+|   |   |       404.png
+|   |   |       maintance.png
+|   |   |       sark.svg
+|   |   |       ship.svg
+|   |   |       sparcle-1.png
+|   |   |       sparcle-2.png
+|   |   |       
+|   |   +---profile
+|   |   |       bg-1.jpg
+|   |   |       bg-2.jpg
+|   |   |       bg-3.jpg
+|   |   |       bg-4.jpg
+|   |   |       cover.jpg
+|   |   |       
+|   |   +---rating
+|   |   |       star-empty.svg
+|   |   |       star-full.svg
+|   |   |       
+|   |   +---slider
+|   |   |       img-slide-1.jpg
+|   |   |       img-slide-2.jpg
+|   |   |       img-slide-3.jpg
+|   |   |       img-slide-4.jpg
+|   |   |       img-slide-5.jpg
+|   |   |       img-slide-6.jpg
+|   |   |       img-slide-7.jpg
+|   |   |       
+|   |   +---user
+|   |   |       avatar-1.png
+|   |   |       avatar-1.svg
+|   |   |       avatar-10.png
+|   |   |       avatar-10.svg
+|   |   |       avatar-2.png
+|   |   |       avatar-2.svg
+|   |   |       avatar-3.png
+|   |   |       avatar-3.svg
+|   |   |       avatar-4.png
+|   |   |       avatar-4.svg
+|   |   |       avatar-5.png
+|   |   |       avatar-5.svg
+|   |   |       avatar-6.png
+|   |   |       avatar-6.svg
+|   |   |       avatar-7.png
+|   |   |       avatar-7.svg
+|   |   |       avatar-8.png
+|   |   |       avatar-8.svg
+|   |   |       avatar-9.png
+|   |   |       avatar-9.svg
+|   |   |       
+|   |   +---viang
+|   |   |       logo-viang.svg
+|   |   |       
+|   |   \---widget
+|   |           blur-bg.png
+|   |           dashborad-1.jpg
+|   |           dashborad-2.jpg
+|   |           dashborad-3.jpg
+|   |           dashborad-4.jpg
+|   |           dashborad-5.jpg
+|   |           emoticon.jpg
+|   |           img-activity-3.svg
+|   |           img-card-1.png
+|   |           img-card-1.svg
+|   |           img-card-2.png
+|   |           img-card-2.svg
+|   |           img-card-bg.svg
+|   |           img-card-master.svg
+|   |           img-food.png
+|   |           img-food.svg
+|   |           img-health.png
+|   |           img-helth.svg
+|   |           img-round1.jpg
+|   |           img-shoping.svg
+|   |           img-shopping.png
+|   |           img-travel.png
+|   |           img-travel.svg
+|   |           master-background.png
+|   |           master-logo.png
+|   |           paypal-logo.png
+|   |           profile-person1.jpg
+|   |           rupay-background.png
+|   |           rupay-logo.png
+|   |           shape1.png
+|   |           shape2.png
+|   |           shape3.png
+|   |           shape4.png
+|   |           shape5.png
+|   |           shape6.png
+|   |           slider5.jpg
+|   |           slider6.jpg
+|   |           slider7.jpg
+|   |           user-1.png
+|   |           user-2.png
+|   |           user-blur-bg.png
+|   |           visa-background.png
+|   |           visa-logo.png
+|   |           
+|   +---js
+|   |   |   component.js
+|   |   |   layout-horizontal.js
+|   |   |   layout-tab.js
+|   |   |   multi-lang.js
+|   |   |   script.js
+|   |   |   theme.js
+|   |   |   
+|   |   +---admin
+|   |   |       course-dashboard.js
+|   |   |       dashboard-help.js
+|   |   |       invoice-dashboard.js
+|   |   |       invoice-list.js
+|   |   |       membership-dashboard.js
+|   |   |       
+|   |   +---application
+|   |   |       calendar.js
+|   |   |       todo.js
+|   |   |       
+|   |   +---chart_maps
+|   |   |       canada.js
+|   |   |       chart-apex.js
+|   |   |       iraq.js
+|   |   |       italy.js
+|   |   |       map-vector.js
+|   |   |       russia.js
+|   |   |       spain.js
+|   |   |       us-aea-en.js
+|   |   |       us-lcc-en.js
+|   |   |       us-merc-en.js
+|   |   |       us-mill-en.js
+|   |   |       
+|   |   +---elements
+|   |   |       ac-alert.js
+|   |   |       ac-datepicker.js
+|   |   |       ac-notification.js
+|   |   |       ac-rangeslider.js
+|   |   |       ac-slider.js
+|   |   |       ac-tour.js
+|   |   |       ac-treeview.js
+|   |   |       
+|   |   +---forms
+|   |   |       form-masking-custom.js
+|   |   |       form-validation.js
+|   |   |       page-croper.js
+|   |   |       
+|   |   +---plugins
+|   |   |   |   gmaps.min.js
+|   |   |   |   Jarallax.js
+|   |   |   |   module.js
+|   |   |   |   
+|   |   |   \---tinymce
+|   |   |       \---plugins
+|   |   |           \---print
+|   |   |                   plugin.min.js
+|   |   |                   
+|   |   \---widgets
+|   |           app-sales.js
+|   |           bar-chart.js
+|   |           bar-chart1.js
+|   |           bar-chart2.js
+|   |           bar-chart3.js
+|   |           call-chart.js
+|   |           cashflow-bar-chart.js
+|   |           category-donut-chart.js
+|   |           chart-activity.js
+|   |           chart-percent.js
+|   |           chart-percent1.js
+|   |           chart-sale.js
+|   |           chart-statistics.js
+|   |           Chartline.js
+|   |           command-card-chart1.js
+|   |           device-chart.js
+|   |           Earnings-chart.js
+|   |           happy-sad-ball.js
+|   |           line-area2.js
+|   |           line-chart1.js
+|   |           line-chart2.js
+|   |           power-card-chart.js
+|   |           processed-bar.js
+|   |           sale-view-second.js
+|   |           sale-view-third.js
+|   |           sale-view.js
+|   |           sales-render.js
+|   |           sitevisite-chart.js
+|   |           Stack-age.js
+|   |           Stack-bar.js
+|   |           Statistics-line.js
+|   |           Statistics-sale.js
+|   |           total-line-1-chart.js
+|   |           total-line-2-chart.js
+|   |           total-line-3-chart.js
+|   |           transactions.js
+|   |           transactions1-2.js
+|   |           transactions3.js
+|   |           user-sale-1.js
+|   |           user-sale2-3.js
+|   |           user-sale4-5.js
+|   |           webchart.js
+|   |           Widget-line-chart.js
+|   |           Widget-line-chart1.js
+|   |           world-low.js
+|   |           
+|   +---json
+|   |   |   2500.txt
+|   |   |   datatable.column.json
+|   |   |   datatable.json
+|   |   |   file-upload.php
+|   |   |   lazy.json
+|   |   |   root.json
+|   |   |   
+|   |   +---locales
+|   |   |       cn.json
+|   |   |       en.json
+|   |   |       fr.json
+|   |   |       ro.json
+|   |   |       
+|   |   \---typehead
+|   |           countries.json
+|   |           movies.json
+|   |           nba.json
+|   |           nhl.json
+|   |           
+|   \---scss
+|       |   custom-user-dropdown.scss
+|       |   landing.scss
+|       |   style-preset.scss
+|       |   style.scss
+|       |   uikit.scss
+|       |   
+|       +---settings
+|       |       _bootstrap-variables.scss
+|       |       _color-variables.scss
+|       |       _theme-variables.scss
+|       |       
+|       \---themes
+|           |   _general.scss
+|           |   _generic.scss
+|           |   
+|           +---components
+|           |       _avatar.scss
+|           |       _badge.scss
+|           |       _button.scss
+|           |       _card.scss
+|           |       _dropdown.scss
+|           |       _form.scss
+|           |       _progress.scss
+|           |       _table.scss
+|           |       _tabs.scss
+|           |       _widget.scss
+|           |       
+|           +---layouts
+|           |       _customizer.scss
+|           |       _pc-common.scss
+|           |       _pc-footer.scss
+|           |       _pc-header.scss
+|           |       _pc-horizontal.scss
+|           |       _pc-sidebar.scss
+|           |       _pc-tab.scss
+|           |       _style-dark.scss
+|           |       _style-rtl-utility.scss
+|           |       _style-rtl.scss
+|           |       
+|           +---pages
+|           |       _admin.scss
+|           |       _application.scss
+|           |       _authentication.scss
+|           |       _calendar.scss
+|           |       _chat.scss
+|           |       _gallery.scss
+|           |       _icon-pages.scss
+|           |       _maintaince.scss
+|           |       _pages.scss
+|           |       _user.scss
+|           |       
+|           \---plugins
+|                   _data-tables.scss
+|                   _daterange.scss
+|                   _lightbox.scss
+|                   _modal.scss
+|                   _notification.scss
+|                   _perfect-scrollbar.scss
+|                   _rangeslider.scss
+|                   _slider.scss
+|                   _sweatalert.scss
+|                   _switches.scss
+|                   _tags-input.scss
+|                   
++---html
+|   |   index.html
+|   |   
+|   +---admins
+|   |       course-course-add.html
+|   |       course-course-view.html
+|   |       course-dashboard.html
+|   |       course-pricing.html
+|   |       course-setting-notifications.html
+|   |       course-setting-payment.html
+|   |       course-setting-pricing.html
+|   |       course-site.html
+|   |       course-student-add.html
+|   |       course-student-apply.html
+|   |       course-student-list.html
+|   |       course-teacher-add.html
+|   |       course-teacher-apply.html
+|   |       course-teacher-list.html
+|   |       helpdesk-create-ticket.html
+|   |       helpdesk-customer.html
+|   |       helpdesk-dashboard.html
+|   |       helpdesk-ticket-details.html
+|   |       helpdesk-ticket.html
+|   |       invoice-create.html
+|   |       invoice-dashboard.html
+|   |       invoice-edit.html
+|   |       invoice-list.html
+|   |       invoice-view.html
+|   |       membership-dashboard.html
+|   |       membership-list.html
+|   |       membership-pricing.html
+|   |       membership-setting.html
+|   |       
+|   +---application
+|   |       calendar.html
+|   |       chat.html
+|   |       gallery-advance.html
+|   |       gallery-grid.html
+|   |       gallery-masonry.html
+|   |       invoice-list.html
+|   |       invoice-summary.html
+|   |       invoice.html
+|   |       task-board.html
+|   |       task-detail.html
+|   |       task-list.html
+|   |       todo.html
+|   |       user-card.html
+|   |       user-list.html
+|   |       user-profile-social.html
+|   |       user-profile.html
+|   |       
+|   +---chart
+|   |       chart-apex.html
+|   |       chart-peity.html
+|   |       map-gmap.html
+|   |       map-vector.html
+|   |       
+|   +---dashboard
+|   |       analytics.html
+|   |       crm.html
+|   |       crypto.html
+|   |       ecommerce.html
+|   |       finance.html
+|   |       index.html
+|   |       project.html
+|   |       
+|   +---demo
+|   |       layout-2.html
+|   |       layout-3.html
+|   |       layout-horizontal.html
+|   |       layout-tab.html
+|   |       layout-vertical.html
+|   |       
+|   +---elements
+|   |       ac_alert.html
+|   |       ac_datepicker-component.html
+|   |       ac_lightbox.html
+|   |       ac_modal.html
+|   |       ac_notification.html
+|   |       ac_rangeslider.html
+|   |       ac_slider.html
+|   |       ac_syntax_highlighter.html
+|   |       ac_tour.html
+|   |       ac_treeview.html
+|   |       animation.html
+|   |       bc_alert.html
+|   |       bc_badges.html
+|   |       bc_breadcrumb.html
+|   |       bc_button.html
+|   |       bc_card.html
+|   |       bc_carousel.html
+|   |       bc_collapse.html
+|   |       bc_color.html
+|   |       bc_dropdowns.html
+|   |       bc_extra.html
+|   |       bc_list-group.html
+|   |       bc_modal.html
+|   |       bc_offcanvas.html
+|   |       bc_pagination.html
+|   |       bc_progress.html
+|   |       bc_spinner.html
+|   |       bc_tabs.html
+|   |       bc_toasts.html
+|   |       bc_tooltip-popover.html
+|   |       bc_typography.html
+|   |       icon-phosphor.html
+|   |       icon-tabler.html
+|   |       
+|   +---forms
+|   |       editor-balloon.html
+|   |       editor-classic.html
+|   |       editor-document.html
+|   |       editor-inline.html
+|   |       file-upload.html
+|   |       form-validation.html
+|   |       form2_basic.html
+|   |       form2_checkbox.html
+|   |       form2_choices.html
+|   |       form2_clipboard.html
+|   |       form2_datepicker.html
+|   |       form2_daterangepicker.html
+|   |       form2_flu-uppy.html
+|   |       form2_inputmask.html
+|   |       form2_input_group.html
+|   |       form2_lay-actionbars.html
+|   |       form2_lay-default.html
+|   |       form2_lay-multicolumn.html
+|   |       form2_lay-stickyactionbars.html
+|   |       form2_markdown.html
+|   |       form2_megaoption.html
+|   |       form2_nouislider.html
+|   |       form2_quill.html
+|   |       form2_radio.html
+|   |       form2_rating.html
+|   |       form2_recaptcha.html
+|   |       form2_switch.html
+|   |       form2_switchjs.html
+|   |       form2_timepicker.html
+|   |       form2_tinymce.html
+|   |       form2_typeahead.html
+|   |       form2_wizard.html
+|   |       form_elements.html
+|   |       form_floating.html
+|   |       image_crop.html
+|   |       
+|   +---layouts
+|   |   |   auth-footer-block.html
+|   |   |   breadcrumb.html
+|   |   |   customizer.html
+|   |   |   footer-block.html
+|   |   |   footer-js-root.html
+|   |   |   footer-js.html
+|   |   |   head-css-root.html
+|   |   |   head-css.html
+|   |   |   head-page-meta-root.html
+|   |   |   head-page-meta.html
+|   |   |   header-content.html
+|   |   |   layout-tab.html
+|   |   |   layout-vertical-viang.html
+|   |   |   layout-vertical.html
+|   |   |   loader.html
+|   |   |   menu-list-viang.html
+|   |   |   menu-list.html
+|   |   |   navbar.html
+|   |   |   sidebar-tab.html
+|   |   |   sidebar-viang.html
+|   |   |   sidebar.html
+|   |   |   topbar-viang.html
+|   |   |   topbar.html
+|   |   |   viang-layout.html
+|   |   |   
+|   |   \---component
+|   |           component-breadcrumb.html
+|   |           
+|   +---other
+|   |       sample-page.html
+|   |       
+|   +---pages
+|   |       change-password-v1.html
+|   |       change-password-v2.html
+|   |       change-password-v3.html
+|   |       change-password-v4.html
+|   |       change-password-v5.html
+|   |       coming-soon.html
+|   |       error.html
+|   |       login-v1.html
+|   |       login-v2.html
+|   |       login-v3.html
+|   |       login-v4.html
+|   |       login-v5.html
+|   |       offline-ui.html
+|   |       register-v1.html
+|   |       register-v2.html
+|   |       register-v3.html
+|   |       register-v4.html
+|   |       register-v5.html
+|   |       reset-password-v1.html
+|   |       reset-password-v2.html
+|   |       reset-password-v3.html
+|   |       reset-password-v4.html
+|   |       reset-password-v5.html
+|   |       
+|   +---table
+|   |       dt_advance.html
+|   |       dt_api.html
+|   |       dt_basic.html
+|   |       dt_ext_autofill.html
+|   |       dt_ext_basic_buttons.html
+|   |       dt_ext_col_reorder.html
+|   |       dt_ext_export_buttons.html
+|   |       dt_ext_fixed_columns.html
+|   |       dt_ext_fixed_header.html
+|   |       dt_ext_key_table.html
+|   |       dt_ext_responsive.html
+|   |       dt_ext_row_reorder.html
+|   |       dt_ext_scroller.html
+|   |       dt_ext_select.html
+|   |       dt_plugin.html
+|   |       dt_sources.html
+|   |       dt_styling.html
+|   |       tbl_bootstrap.html
+|   |       tbl_border.html
+|   |       tbl_dt-add-rows.html
+|   |       tbl_dt-column-manipulation.html
+|   |       tbl_dt-datetime-sorting.html
+|   |       tbl_dt-dynamic-import.html
+|   |       tbl_dt-export.html
+|   |       tbl_dt-fetch-api.html
+|   |       tbl_dt-filters.html
+|   |       tbl_dt-methods.html
+|   |       tbl_dt-render-column-cells.html
+|   |       tbl_dt-simple.html
+|   |       tbl_sizing.html
+|   |       tbl_styling.html
+|   |       
+|   +---viang
+|   |       cliente-detalhe.html
+|   |       clientes.html
+|   |       config.html
+|   |       dashboard.html
+|   |       financeiro.html
+|   |       login.html
+|   |       logs.html
+|   |       onboarding.html
+|   |       produtos.html
+|   |       publicidade.html
+|   |       
+|   \---widget
+|           w_chart.html
+|           w_data.html
+|           w_statistics.html
+|           w_table.html
+|           w_user.html
+|           
+\---types
+        global.d.ts
+        

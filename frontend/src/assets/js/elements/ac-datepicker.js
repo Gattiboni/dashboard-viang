@@ -31,7 +31,28 @@
     calendarWeeks: true
   });
 
-  const datepicker_range = new DateRangePicker(document.querySelector('#datepicker_range'), {
-    buttonClass: 'btn'
-  });
+  const rangeEl = document.querySelector('#datepicker_range');
+
+  if (rangeEl) {
+    const datepicker_range = new DateRangePicker(rangeEl, {
+      buttonClass: 'btn',
+      autohide: true
+    });
+
+    rangeEl.addEventListener('changeDate', function (e) {
+      const dates = e.detail.date;
+
+      if (
+        Array.isArray(dates) &&
+        dates.length === 2 &&
+        dates[0] &&
+        dates[1] &&
+        window.setCustom
+      ) {
+        const toISO = d => d.toISOString().split('T')[0];
+        window.setCustom(toISO(dates[0]), toISO(dates[1]));
+      }
+    });
+  }
+
 })();

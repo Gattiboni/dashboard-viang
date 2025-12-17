@@ -300,6 +300,46 @@ Esse processo garantirá que os dados históricos dos últimos 30 dias sejam car
 
 ---
 
+---
+
+## v1.3.0 — 2025-12-16  
+### BI / Frontend: Saída do Metabase e Implementação de Dashboard Nativo
+
+### Alterado  
+- Abandonada a estratégia de consumo do Metabase (embeds estáticos e assinados) para a **Home do Dashboard**.  
+- A Home passa a ser renderizada integralmente no frontend (AdminDek), com gráficos e KPIs implementados via JavaScript e ApexCharts.  
+- O Metabase deixa de ser dependência operacional para o MVP da Home, permanecendo apenas como referência analítica e validação conceitual.
+
+### Adicionado  
+- Implementação de **Edge Functions no Supabase** para servir dados agregados da Home, seguindo o padrão:
+  - **Uma Edge Function por página** (Home/Dashboard), responsável por orquestrar todas as consultas necessárias.
+  - Funções SQL estáveis no schema `dashboard` como camada única de acesso a dados.
+- Criação de funções SQL dedicadas para cada gráfico e KPI da Home, garantindo:
+  - Rastreabilidade
+  - Reprodutibilidade
+  - Independência do frontend
+(Atualmente elas não estão ativas nem sendo solicitados. Processo foi refeito no Supabase)
+
+- **UM serviço novo por página deve ser criado para cada página no Railway (empty service - configs iguais às do serviço para home - dashboard)**
+
+- Implementação dos gráficos nativos no frontend, respeitando integralmente:
+  - Dicionário de dados do projeto
+  - Queries validadas previamente no Metabase
+  - Layout e grid do template AdminDek
+
+### Removido  
+- Uso de iframes, JWTs e fluxo de embed do Metabase na Home do Dashboard.  
+- Dependência do comportamento interno do Metabase (bootstrap, filtros globais, spinner silencioso).
+
+### Impacto  
+- Redução drástica de complexidade operacional no frontend.  
+- Eliminação de erros silenciosos e comportamentos imprevisíveis do embed.  
+- Controle total do ciclo: **SQL → Edge Function → Frontend**.  
+- Arquitetura mais modular, escalável e alinhada ao MVP congelado.  
+- Base sólida para expansão futura (novas páginas, IA, comparativos), sem retrabalho.
+
+---
+
 
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

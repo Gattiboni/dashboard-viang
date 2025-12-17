@@ -23,6 +23,7 @@
 
             <!-- [ Main Content ] start -->
             <div class="row">
+
                 <!-- Page Title (Dashboard Home) -->
                 <div class="col-12">
                     <div class="d-flex align-items-center justify-content-between mb-3">
@@ -31,38 +32,980 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <select id="global-period-selector" class="form-select form-select-sm w-auto">
-                                <option value="7d">Últimos 7 dias</option>
-                                <option value="30d" selected>Últimos 30 dias</option>
-                                <option value="90d">Últimos 90 dias</option>
-                                <option value="custom">Período personalizado</option>
-                            </select>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Período">
+                                <button type="button" class="btn btn-outline-primary" data-period="7d">
+                                    7 dias
+                                </button>
+                                <button type="button" class="btn btn-outline-primary active" data-period="30d">
+                                    30 dias
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-period="90d">
+                                    90 dias
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Receita Bruta (1/4) -->
+                <div class="col-xl-3 col-lg-4 col-md-12">
+                    <div class="card kpi-elevated bg-success-subtle">
+                        <div class="card-body d-flex flex-column justify-content-center py-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <p class="mb-0 text-muted fw-bold">Receita bruta (agregado)</p>
+                                <i class="ti ti-dots-vertical text-success"></i>
+                            </div>
+
+                            <div class="text-center">
+                                <h1 id="kpi-receita-bruta" class="mb-0 text-success display-4">
+                                    —
+                                </h1>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-2">
+                                <span class="text-muted f-12" data-period-badge-kpi>Período: 30 dias</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receita por semana (3/4) -->
+                <div class="col-xl-9 col-lg-8 col-md-12">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Receita por semana</h5>
+                                <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="chart-receita-semana" style="min-height: 320px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Receita por cliente por semana (Top 10) -->
+                <div class="col-12 mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Receita por cliente por semana (Top 10)</h5>
+                                <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="chart-receita-cliente-semana" style="min-height: 360px;"></div>
                         </div>
                     </div>
                 </div>
 
 
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Visão Geral</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="card-body">
-
-                                    <iframe
-                                        src="https://micro-front-metabase-embed-home-dashboard-production.up.railway.app"
-                                        class="w-100" style="min-height: 600px; border: 0;" loading="lazy">
-                                    </iframe>
-
-                                </div>
-                            </div>
+                <!-- Pedidos por dia -->
+                <div class="col-12 mt-4">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0">Pedidos por dia</h5>
+                            <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
                         </div>
                     </div>
+                    <div class="card-body">
+                        <div id="chart-pedidos-dia" style="min-height: 320px;"></div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- [ Main Content ] end -->
+            <!-- Unidades por categoria -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0">Unidades por categoria</h5>
+                            <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="chart-unidades-categoria" style="min-height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top SKUs -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0">Top 10 SKUs</h5>
+                            <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="chart-top-skus" style="min-height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribuição por categoria -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0">Distribuição por categoria</h5>
+                            <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="chart-distribuicao-categoria" style="min-height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticket médio por categoria -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0">Ticket médio por categoria</h5>
+                            <span class="text-muted mb-0 f-12" data-period-badge>Período: 30 dias</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="chart-ticket-medio-categoria" style="min-height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- [ Main Content ] end -->
+
+
+        <!-- ApexCharts (obrigatório para os gráficos) -->
+        <script src="../assets/js/plugins/apexcharts.min.js"></script>
+
+        <script>
+            (function () {
+                /* =====================================================
+                 *  CONFIG
+                 * ===================================================== */
+                const SUPABASE_FN_BASE = 'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/home-dashboard';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+
+                /* =====================================================
+                 *  FORMATAÇÃO
+                 * ===================================================== */
+                function formatCurrencyCompactBRL(value) {
+                    if (value === null || value === undefined) return '—';
+
+                    const abs = Math.abs(value);
+                    let formatted;
+                    let suffix = '';
+
+                    if (abs >= 1_000_000_000) {
+                        formatted = abs / 1_000_000_000;
+                        suffix = 'B';
+                    } else if (abs >= 1_000_000) {
+                        formatted = abs / 1_000_000;
+                        suffix = 'M';
+                    } else if (abs >= 1_000) {
+                        formatted = abs / 1_000;
+                        suffix = 'k';
+                    } else {
+                        formatted = abs;
+                    }
+
+                    const number = new Intl.NumberFormat('pt-BR', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1
+                    }).format(formatted);
+
+                    return `R$ ${number}${suffix}`;
+                }
+
+                function formatNumberCompact(value) {
+                    if (value === null || value === undefined) return '—';
+
+                    const abs = Math.abs(value);
+                    let formatted;
+                    let suffix = '';
+
+                    if (abs >= 1_000_000_000) {
+                        formatted = abs / 1_000_000_000;
+                        suffix = 'B';
+                    } else if (abs >= 1_000_000) {
+                        formatted = abs / 1_000_000;
+                        suffix = 'M';
+                    } else if (abs >= 1_000) {
+                        formatted = abs / 1_000;
+                        suffix = 'k';
+                    } else {
+                        formatted = abs;
+                    }
+
+                    const number = new Intl.NumberFormat('pt-BR', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 1
+                    }).format(formatted);
+
+                    return `${number}${suffix}`;
+                }
+
+                function formatDateBRShort(isoDateStr) {
+                    if (!isoDateStr) return '—';
+                    // espera "YYYY-MM-DD"
+                    const [y, m, d] = String(isoDateStr).split('-');
+                    if (!y || !m || !d) return isoDateStr;
+                    return `${d}/${m}/${y.slice(2, 4)}`;
+                } const el = document.querySelector('#datepicker_range');
+
+                function toISODate(d) {
+                    return d.toISOString().split('T')[0];
+                }
+
+                function parseCustomRange(raw) {
+                    const s = String(raw || '').trim();
+                    if (!s) return null;
+
+                    const m = s.match(/(\d{4}-\d{2}-\d{2})\s*(?:-|a|to|até)\s*(\d{4}-\d{2}-\d{2})/i);
+                    if (m) {
+                        return { start_date: m[1], end_date: m[2] };
+                    }
+
+                    return null;
+                }
+
+                /* =====================================================
+                *  CORES — PALETA ADMINDek
+                * ===================================================== */
+                const ADMINDek_COLORS = [
+                    '#4F46E5', // primary
+                    '#06B6D4', // info
+                    '#10B981', // success
+                    '#F59E0B', // warning
+                    '#EF4444', // danger
+                    '#6366F1', // indigo
+                    '#22C55E', // green
+                    '#F97316'  // orange
+                ];
+
+                function pickColors(qty) {
+                    return ADMINDek_COLORS.slice(0, qty);
+                }
+
+                /* =====================================================
+                 *  ESTADO GLOBAL DE PERÍODO
+                 * ===================================================== */
+                window.DASHBOARD_PERIOD = {
+                    type: 'preset',
+                    preset: '30d',
+                    start_date: null,
+                    end_date: null
+                };
+
+                function setActivePresetButton(preset) {
+                    document.querySelectorAll('[data-period]').forEach(btn => {
+                        btn.classList.toggle('active', btn.getAttribute('data-period') === preset);
+                    });
+                }
+
+                function setPreset(preset) {
+                    window.DASHBOARD_PERIOD = {
+                        type: 'preset',
+                        preset,
+                        start_date: null,
+                        end_date: null
+                    };
+
+                    setActivePresetButton(preset);
+                    updatePeriodBadges();
+                    reloadAll();
+                }
+
+                function setCustom(start_date, end_date) {
+                    window.DASHBOARD_PERIOD = {
+                        type: 'custom',
+                        preset: null,
+                        start_date,
+                        end_date
+                    };
+
+                    document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+                    reloadAll();
+                }
+
+                function getPeriodBadgeText() {
+                    const p = window.DASHBOARD_PERIOD;
+                    if (!p) return '';
+
+                    if (p.type === 'preset') {
+                        const map = { '7d': '7 dias', '30d': '30 dias', '90d': '90 dias' };
+                        return `Período: ${map[p.preset] || p.preset}`;
+                    }
+
+                    if (p.type === 'custom') {
+                        return `Período: ${formatDateBRShort(p.start_date)} a ${formatDateBRShort(p.end_date)}`;
+                    }
+
+                    return '';
+                }
+
+                function updatePeriodBadges() {
+                    const txt = getPeriodBadgeText();
+
+                    document.querySelectorAll('[data-period-badge]').forEach((el) => {
+                        el.textContent = txt;
+                    });
+
+                    document.querySelectorAll('[data-period-badge-kpi]').forEach((el) => {
+                        el.textContent = txt;
+                    });
+                }
+
+
+                /* =====================================================
+                 *  CONTROLES DE PERÍODO
+                 * ===================================================== */
+                document.querySelectorAll('[data-period]').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const preset = this.getAttribute('data-period');
+                        setPreset(preset);
+                    });
+                });
+
+
+                /* =====================================================
+                 *  FETCH HELPER
+                 * ===================================================== */
+                async function postJSON(path, payload) {
+                    const res = await fetch(`${SUPABASE_FN_BASE}/${path}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+
+                    if (!res.ok) {
+                        const msg = (data && (data.error || data.message)) ? (data.error || data.message) : `HTTP ${res.status}`;
+                        throw new Error(`[${path}] ${msg}`);
+                    }
+
+                    return data;
+                }
+
+
+                /* =====================================================
+                 *  KPI — RECEITA BRUTA (AGREGADO)
+                 * ===================================================== */
+                async function loadReceitaBruta() {
+                    try {
+                        const rows = await postJSON('kpi-receita-bruta', window.DASHBOARD_PERIOD);
+                        const total = rows?.[0]?.total;
+
+                        const el = document.querySelector('#kpi-receita-bruta');
+                        if (el) {
+                            el.textContent = formatCurrencyCompactBRL(total);
+                        }
+                    } catch (e) {
+                        console.error('[KPI Receita Bruta]', e);
+                    }
+                }
+
+                /* =====================================================
+                 *  GRÁFICO — RECEITA POR SEMANA (LINHA + TENDÊNCIA)
+                 * ===================================================== */
+                let chartReceitaSemana;
+
+                async function loadReceitaPorSemana() {
+                    const el = document.querySelector('#chart-receita-semana');
+                    if (!el) return;
+
+                    try {
+                        let period = window.DASHBOARD_PERIOD;
+
+                        if (period.type === 'preset' && period.preset === '7d') {
+                            period = {
+                                type: 'preset',
+                                preset: '30d',
+                                start_date: null,
+                                end_date: null
+                            };
+                        }
+
+                        const p = window.DASHBOARD_PERIOD;
+
+                        const periodForWeekly = (
+                            p && p.type === 'preset' && p.preset === '7d'
+                                ? { ...p, preset: '30d' }
+                                : p
+                        );
+
+                        const rows = await postJSON('chart-receita-por-semana', periodForWeekly);
+
+                        const topRows = rows.slice(0, 10);
+
+                        // labels no formato: "Semana de DD/MM a DD/MM"
+                        const categories = topRows.map(r => {
+                            const start = r.data;
+                            const endDate = new Date(start);
+
+                            endDate.setDate(endDate.getDate() + 6);
+
+                            const end = endDate.toISOString().slice(0, 10);
+
+                            return `Semana de ${formatDateBRShort(start)} a ${formatDateBRShort(end)}`;
+                        });
+
+                        const values = topRows.map(r => r.sum);
+
+                        const trend = values.map((v, i) => {
+                            if (i === 0) return v;
+                            return (values[i - 1] + v) / 2;
+                        });
+
+                        const options = {
+                            chart: { type: 'line', height: 320, toolbar: { show: false } },
+                            colors: pickColors(2),
+                            series: [
+                                { name: 'Receita', type: 'column', data: values },
+                                { name: 'Tendência', type: 'line', data: trend }
+                            ],
+                            stroke: { width: [0, 2], dashArray: [0, 6] },
+                            dataLabels: {
+                                enabled: true,
+                                enabledOnSeries: [0, 1],
+                                formatter: function (val) { return formatCurrencyCompactBRL(val); },
+                                offsetY: -8,
+                                style: { fontSize: '11px', fontWeight: 500 }
+                            },
+                            xaxis: {
+                                categories,
+                            },
+                            yaxis: { labels: { formatter: formatCurrencyCompactBRL } },
+                            tooltip: { y: { formatter: formatCurrencyCompactBRL } },
+                            legend: { show: true, position: 'top' }
+                        };
+
+
+                        if (chartReceitaSemana) {
+                            chartReceitaSemana.updateOptions(options);
+                        } else {
+                            chartReceitaSemana = new ApexCharts(el, options);
+                            chartReceitaSemana.render();
+                        }
+                    } catch (e) {
+                        console.error('[Chart Receita Semana]', e);
+                    }
+                }
+
+                /* =====================================================
+                *  GRÁFICO — RECEITA POR CLIENTE POR SEMANA (TOP 10)
+                * ===================================================== */
+                let chartReceitaClienteSemana;
+
+                async function loadReceitaClienteSemana() {
+                    const el = document.querySelector('#chart-receita-cliente-semana');
+                    if (!el) return;
+
+                    try {
+                        let period = window.DASHBOARD_PERIOD;
+
+                        // MESMA REGRA do Receita por semana
+                        if (period.type === 'preset' && period.preset === '7d') {
+                            period = {
+                                type: 'preset',
+                                preset: '30d',
+                                start_date: null,
+                                end_date: null
+                            };
+                        }
+
+                        const p = window.DASHBOARD_PERIOD;
+
+                        const periodForWeekly = (
+                            p && p.type === 'preset' && p.preset === '7d'
+                                ? { ...p, preset: '30d' }
+                                : p
+                        );
+
+                        // MUDA: endpoint específico
+                        const rows = await postJSON(
+                            'chart-receita-cliente-semana',
+                            periodForWeekly
+                        );
+
+                        /*
+                         * rows esperado (RPC):
+                         * [
+                         *   { client_id, client_name, semana_inicio, sum }
+                         * ]
+                         */
+
+                        // MESMA LÓGICA: semanas únicas ordenadas
+                        const weeks = [...new Set(rows.map(r => r.semana_inicio))].sort();
+
+                        // MESMO PADRÃO de labels semanais
+                        const categories = weeks.map(start => {
+                            const endDate = new Date(start);
+                            endDate.setDate(endDate.getDate() + 6);
+                            const end = endDate.toISOString().slice(0, 10);
+                            return `Semana de ${formatDateBRShort(start)} a ${formatDateBRShort(end)}`;
+                        });
+
+                        // MUDA: múltiplas séries (uma por cliente)
+                        const clientIds = [...new Set(rows.map(r => r.client_id))];
+
+                        const clientNames = {};
+                        rows.forEach(r => {
+                            clientNames[r.client_id] = r.client_name;
+                        });
+
+                        const series = clientIds.map(clientId => {
+                            const data = weeks.map(week => {
+                                const row = rows.find(
+                                    r => r.client_id === clientId && r.semana_inicio === week
+                                );
+                                return row ? row.sum : 0;
+                            });
+
+                            return {
+                                name: clientNames[clientId] ?? '-',
+                                type: 'line',
+                                data
+                            };
+                        });
+
+                        // CONFIGURAÇÃO = RECEITA POR SEMANA, SEM TENDÊNCIA
+                        const options = {
+                            chart: {
+                                type: 'line',
+                                height: 360,
+                                toolbar: { show: false }
+                            },
+
+                            colors: pickColors(series.length),
+
+                            series,
+
+                            stroke: {
+                                width: 2
+                            },
+
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val) {
+                                    return formatCurrencyCompactBRL(val);
+                                },
+                                style: {
+                                    fontSize: '11px',
+                                    fontWeight: 500
+                                }
+                            },
+
+                            xaxis: {
+                                categories
+                            },
+
+                            yaxis: {
+                                labels: {
+                                    formatter: formatCurrencyCompactBRL
+                                }
+                            },
+
+                            tooltip: {
+                                y: {
+                                    formatter: formatCurrencyCompactBRL
+                                }
+                            },
+
+                            legend: {
+                                show: true,
+                                position: 'top',
+                                horizontalAlign: 'center'
+                            }
+                        };
+
+                        if (chartReceitaClienteSemana) {
+                            chartReceitaClienteSemana.updateOptions(options);
+                        } else {
+                            chartReceitaClienteSemana = new ApexCharts(el, options);
+                            chartReceitaClienteSemana.render();
+                        }
+
+                    } catch (e) {
+                        console.error('[Chart Receita Cliente Semana]', e);
+                    }
+                }
+
+
+                /* =====================================================
+                 *  GRÁFICO — PEDIDOS POR DIA (BARRAS + TENDÊNCIA)
+                 * ===================================================== */
+                let chartPedidosDia;
+
+                async function loadPedidosPorDia() {
+                    const el = document.querySelector('#chart-pedidos-dia');
+                    if (!el) return;
+
+                    try {
+                        const rows = await postJSON('chart-pedidos-dia', window.DASHBOARD_PERIOD);
+
+                        const categories = rows.map(r => formatDateBRShort(r.data));
+                        const values = rows.map(r => r.sum);
+
+                        const trend = values.map((v, i) => {
+                            if (i === 0) return v;
+                            return (values[i - 1] + v) / 2;
+                        });
+
+                        const options = {
+                            chart: { type: 'line', height: 320, toolbar: { show: false } },
+                            colors: pickColors(2),
+                            series: [
+                                { name: 'Pedidos', type: 'column', data: values },
+                                { name: 'Tendência', type: 'line', data: trend }
+                            ],
+                            stroke: { width: [0, 2], dashArray: [0, 6] },
+                            dataLabels: {
+                                enabled: true,
+                                enabledOnSeries: [0, 1],
+                                formatter: function (val) {
+                                    return formatNumberCompact(val);
+                                },
+                                offsetY: -8,
+                                style: {
+                                    fontSize: '11px',
+                                    fontWeight: 500
+                                }
+                            },
+                            xaxis: { categories },
+                            yaxis: { labels: { rotate: 45, formatter: function (v) { return formatNumberCompact(v); } } },
+                            tooltip: { enabled: false },
+                            legend: { show: true, position: 'top' }
+                        };
+
+                        if (chartPedidosDia) {
+                            chartPedidosDia.updateOptions(options);
+                        } else {
+                            chartPedidosDia = new ApexCharts(el, options);
+                            chartPedidosDia.render();
+                        }
+                    } catch (e) {
+                        console.error('[Chart Pedidos Dia]', e);
+                    }
+                }
+
+                /* =====================================================
+                 *  GRÁFICO — UNIDADES POR CATEGORIA (BARRAS HORIZONTAIS)
+                 * ===================================================== */
+                let chartUnidadesCategoria;
+
+                async function loadUnidadesPorCategoria() {
+                    const el = document.querySelector('#chart-unidades-categoria');
+                    if (!el) return;
+
+                    try {
+                        const rows = await postJSON('chart-unidades-categoria', window.DASHBOARD_PERIOD);
+
+                        // ordena decrescente por unidades
+                        const sorted = [...rows].sort((a, b) => (Number(b.sum) || 0) - (Number(a.sum) || 0));
+
+                        // top 9
+                        const head = sorted.slice(0, 9);
+                        const tail = sorted.slice(9);
+
+                        // soma dos "outros"
+                        const outrosSum = tail.reduce((acc, r) => acc + (Number(r.sum) || 0), 0);
+
+                        const categories = [
+                            ...head.map(r => r.category_name),
+                            'Outros'
+                        ];
+
+                        const values = [
+                            ...head.map(r => Number(r.sum) || 0),
+                            outrosSum
+                        ];
+
+                        const options = {
+                            chart: {
+                                type: 'bar',
+                                height: 360,
+                                toolbar: { show: false }
+                            },
+
+                            colors: pickColors(values.length),
+
+                            series: [
+                                {
+                                    name: 'Unidades Vendidas',
+                                    data: values
+                                }
+                            ],
+
+                            plotOptions: {
+                                bar: {
+                                    horizontal: true,
+                                    barHeight: '70%',
+                                    dataLabels: {
+                                        position: 'inside'
+                                    }
+                                }
+                            },
+
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val) {
+                                    return String(val); // NUNCA compactar unidades
+                                },
+                                style: {
+                                    fontSize: '12px',
+                                    fontWeight: 600
+                                }
+                            },
+
+                            xaxis: {
+                                categories: categories,
+                                title: {
+                                    text: 'Unidades Vendidas'
+                                },
+                                labels: {
+                                    formatter: function (v) {
+                                        return String(v);
+                                    }
+                                }
+                            },
+
+                            yaxis: {
+                                title: {
+                                    text: 'Categoria'
+                                }
+                            },
+
+                            tooltip: {
+                                y: {
+                                    formatter: function (v) {
+                                        return String(v);
+                                    }
+                                }
+                            },
+
+                            legend: { show: false }
+                        };
+
+                        if (chartUnidadesCategoria) {
+                            chartUnidadesCategoria.updateOptions(options);
+                        } else {
+                            chartUnidadesCategoria = new ApexCharts(el, options);
+                            chartUnidadesCategoria.render();
+                        }
+                    } catch (e) {
+                        console.error('[Chart Unidades Categoria]', e);
+                    }
+                }
+
+                /* =====================================================
+                 *  GRÁFICO — TOP 10 SKUS (BARRAS + LINHA, 2 EIXOS)
+                 * ===================================================== */
+                let chartTopSkus;
+
+                async function loadTopSkus() {
+                    const el = document.querySelector('#chart-top-skus');
+                    if (!el) return;
+
+                    try {
+                        const rows = await postJSON('chart-top-skus', window.DASHBOARD_PERIOD);
+
+                        const categories = rows.map(r => r.product_title);
+                        const unidades = rows.map(r => r.unidades);
+                        const receita = rows.map(r => r.receita);
+
+                        const options = {
+                            chart: { type: 'line', height: 420, toolbar: { show: false } },
+                            colors: pickColors(2),
+                            series: [
+                                { name: 'Unidades Vendidas', type: 'column', data: unidades },
+                                { name: 'Receita Bruta', type: 'line', data: receita }
+                            ],
+
+                            stroke: { width: [0, 2], dashArray: [0, 6] },
+
+                            dataLabels: {
+                                enabled: true,
+                                enabledOnSeries: [0, 1],
+                                formatter: function (val, opts) {
+                                    return opts.seriesIndex === 0
+                                        ? String(val)                 // unidades: NUNCA arredondar
+                                        : formatCurrencyCompactBRL(val);
+                                },
+                                offsetY: -6,
+                                style: {
+                                    fontSize: '11px',
+                                    fontWeight: 500
+                                }
+                            },
+
+                            xaxis: { categories, labels: { rotate: -45 } },
+
+                            yaxis: [
+                                {
+                                    title: { text: 'Unidades Vendidas' },
+                                    labels: {
+                                        formatter: function (v) {
+                                            return String(v); // sem compactação
+                                        }
+                                    }
+                                },
+                                {
+                                    opposite: true,
+                                    title: { text: 'Receita Bruta' },
+                                    labels: { formatter: formatCurrencyCompactBRL }
+                                }
+                            ],
+
+                            legend: {
+                                show: true,
+                                position: 'top',
+                                horizontalAlign: 'center'
+                            },
+
+                            title: {
+                                text: 'Unidades Vendidas e Receita Bruta',
+                                align: 'center',
+                                style: { fontSize: '14px', fontWeight: 600 }
+                            },
+
+                            tooltip: {
+                                y: [
+                                    { formatter: function (v) { return String(v); } },
+                                    { formatter: formatCurrencyCompactBRL }
+                                ]
+                            }
+                        };
+
+                        if (chartTopSkus) {
+                            chartTopSkus.updateOptions(options);
+                        } else {
+                            chartTopSkus = new ApexCharts(el, options);
+                            chartTopSkus.render();
+                        }
+                    } catch (e) {
+                        console.error('[Chart Top SKUs]', e);
+                    }
+                }
+
+                /* =====================================================
+                 *  GRÁFICO — DISTRIBUIÇÃO DE VENDAS POR CATEGORIA (PIE)
+                 * ===================================================== */
+                let chartDistribuicaoCategoria;
+
+                async function loadDistribuicaoPorCategoria() {
+                    const el = document.querySelector('#chart-distribuicao-categoria');
+                    if (!el) return;
+
+                    try {
+                        const rows = await postJSON('chart-distribuicao-categoria', window.DASHBOARD_PERIOD);
+
+                        const sorted = [...rows].sort((a, b) => (Number(b.sum) || 0) - (Number(a.sum) || 0));
+                        const head = sorted.slice(0, 14);
+                        const tail = sorted.slice(14);
+
+                        const outrosSum = tail.reduce((acc, r) => acc + (Number(r.sum) || 0), 0);
+
+                        const labels = [...head.map(r => r.category_name), 'Outros'];
+                        const values = [...head.map(r => r.sum), outrosSum];
+
+                        const total = values.reduce((acc, v) => acc + (Number(v) || 0), 0);
+
+                        const options = {
+                            chart: { type: 'pie', height: 360, toolbar: { show: false } },
+                            colors: pickColors(values.length),
+                            series: values,
+                            labels: labels,
+                            legend: { position: 'left' },
+                            tooltip: { y: { formatter: formatCurrencyCompactBRL } }
+                        };
+
+                        if (chartDistribuicaoCategoria) {
+                            chartDistribuicaoCategoria.updateOptions(options);
+                        } else {
+                            chartDistribuicaoCategoria = new ApexCharts(el, options);
+                            chartDistribuicaoCategoria.render();
+                        }
+                    } catch (e) {
+                        console.error('[Chart Distribuição Categoria]', e);
+                    }
+                }
+
+                /* =====================================================
+                 *  GRÁFICO — TICKET MÉDIO POR CATEGORIA (BARRAS)
+                 * ===================================================== */
+                let chartTicketMedioCategoria;
+
+                async function loadTicketMedioPorCategoria() {
+                    const el = document.querySelector('#chart-ticket-medio-categoria');
+                    if (!el) return;
+
+                    try {
+                        const rows = await postJSON('chart-ticket-medio-categoria', window.DASHBOARD_PERIOD);
+
+                        const sorted = [...rows].sort((a, b) => (Number(b.avg) || 0) - (Number(a.avg) || 0));
+
+                        // limita a 10 categorias, SEM "Outros"
+                        const head = sorted.slice(0, 10);
+
+                        const categories = head.map(r => r.category_name);
+                        const values = head.map(r => r.avg);
+
+
+                        const options = {
+                            chart: { type: 'bar', height: 360, toolbar: { show: false } },
+                            colors: pickColors(values.length),
+                            series: [{ name: 'Ticket Médio', data: values }],
+                            plotOptions: { bar: { horizontal: false } },
+                            dataLabels: { enabled: false },
+                            xaxis: { categories, labels: { rotate: -45 } },
+                            yaxis: { labels: { formatter: formatCurrencyCompactBRL } },
+                            tooltip: { y: { formatter: formatCurrencyCompactBRL } },
+                            legend: { show: false }
+                        };
+
+                        if (chartTicketMedioCategoria) {
+                            chartTicketMedioCategoria.updateOptions(options);
+                        } else {
+                            chartTicketMedioCategoria = new ApexCharts(el, options);
+                            chartTicketMedioCategoria.render();
+                        }
+                    } catch (e) {
+                        console.error('[Chart Ticket Médio Categoria]', e);
+                    }
+                }
+
+                /* =====================================================
+                 *  RELOAD CENTRAL
+                 * ===================================================== */
+                function reloadAll() {
+                    loadReceitaBruta();
+                    loadReceitaPorSemana();
+                    loadPedidosPorDia();
+                    loadUnidadesPorCategoria();
+                    loadTopSkus();
+                    loadDistribuicaoPorCategoria();
+                    loadTicketMedioPorCategoria();
+                    loadReceitaClienteSemana();
+                }
+
+                /* =====================================================
+                 *  BOOTSTRAP
+                 * ===================================================== */
+                setActivePresetButton('30d');
+                updatePeriodBadges();
+                reloadAll();
+
+            })();
+        </script>
 
 </body>
 <!-- [Body] end -->

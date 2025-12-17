@@ -518,5 +518,61 @@ Essa decisão **não substitui nem invalida** a arquitetura existente, mas cria 
 
 ---
 
+---
+
+### Decisão 021 — 2025-12-16  
+#### Abandono do Metabase na Home e Adoção de Dashboard Nativo com Edge Functions
+
+**Contexto**  
+Durante a implementação da Home do Dashboard Viang, o uso de embeds estáticos do Metabase revelou limitações práticas severas, apesar de conceitualmente corretas:
+
+- Spinner infinito sem erro explícito
+- Falhas silenciosas de cards
+- Forte acoplamento ao bootstrap interno da SPA do Metabase
+- Dificuldade extrema de depuração dentro de um template admin complexo
+- Dependência excessiva de comportamento não determinístico do embed
+
+Paralelamente, constatou-se que:
+- Todas as métricas da Home já estavam claramente definidas no dicionário de dados.
+- As queries necessárias já existiam e estavam validadas no Metabase.
+- O frontend precisava de previsibilidade, controle e modularidade para escalar.
+
+**Decisão**  
+Abandonar completamente o Metabase como runtime da **Home do Dashboard** e adotar o seguinte modelo definitivo:
+
+1. **Frontend**
+   - Renderização nativa de todos os gráficos e KPIs no AdminDek.
+   - Uso de ApexCharts e componentes do template, sem customizações fora do dump oficial.
+   - Nenhum iframe, embed ou dependência visual do Metabase.
+
+2. **Backend / Dados**
+   - Criação de **funções SQL estáveis** no schema `dashboard`, uma por gráfico/KPI.
+   - As funções SQL passam a ser a **fonte única de verdade** para agregações da Home.
+   - Nenhuma lógica de negócio no frontend.
+
+3. **Edge Functions**
+   - Uma **Edge Function por página** (Home/Dashboard).
+   - A Edge Function orquestra todas as chamadas às funções SQL necessárias.
+   - O frontend consome **um único endpoint** para a Home, garantindo coesão e versionamento.
+
+4. **Papel do Metabase**
+   - Mantido apenas como ferramenta de BI exploratório, validação analítica e apoio conceitual.
+   - Nenhuma dependência operacional no produto final.
+
+**Motivos**  
+- Eliminar instabilidade e comportamento opaco do embed.  
+- Reduzir complexidade cognitiva e técnica no frontend.  
+- Garantir rastreabilidade total entre métrica → SQL → gráfico.  
+- Evitar retrabalho futuro causado por limitações do Metabase fora do BI puro.  
+- Manter fidelidade absoluta ao dump do AdminDek e ao MVP congelado.
+
+**Impacto**  
+- Home do Dashboard passa a ser **100% determinística**.  
+- Arquitetura mais simples, limpa e sustentável.  
+- Facilita manutenção, debugging e evolução incremental.  
+- Permite escalar para múltiplas páginas sem replicar lógica nem embeds frágeis.  
+- Metabase deixa de ser gargalo técnico no produto.
+
+---
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
