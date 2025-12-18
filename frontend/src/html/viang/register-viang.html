@@ -107,7 +107,7 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
 
       // TODO: trocar quando subir no HostGator (você pediu pra deixar pronto e trocar depois)
-      const EMAIL_REDIRECT_TO = 'https://SEU_DOMINIO/dashboard-viang/login';
+      const EMAIL_REDIRECT_TO = 'https://painel.viang.com.br/viang/login-viang.html';
 
       const form = document.getElementById('signup-form');
       const alertEl = document.getElementById('signup-alert');
@@ -167,19 +167,17 @@
           const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
             method: 'POST',
             headers: {
+              'Content-Type': 'application/json',
               apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json'
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({
               email,
               password,
-              options: {
-                emailRedirectTo: EMAIL_REDIRECT_TO,
-                data: {
-                  first_name: firstName || null,
-                  last_name: lastName || null
-                }
+              email_redirect_to: EMAIL_REDIRECT_TO,
+              data: {
+                first_name: firstName || null,
+                last_name: lastName || null
               }
             })
           });
@@ -213,7 +211,6 @@
     })();
   </script>
 
-  @@include('./layouts/footer-js.html') @@include('./layouts/customizer.html')
 </body>
 <!-- [Body] end -->
 
