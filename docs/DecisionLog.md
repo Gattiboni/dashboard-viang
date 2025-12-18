@@ -611,4 +611,57 @@ Adotar o **Supabase Auth** como solução única e definitiva de autenticação 
 
 ---
 
+## DecisionLog — Padronização de autenticação frontend via authGate síncrono
+
+### Data
+2025-12-18
+
+### Decisão
+Adotar um único modelo canônico de autenticação frontend para o MVP, baseado exclusivamente na verificação síncrona da existência do token `sb_access_token` no `localStorage`.
+
+### Contexto
+Tentativas anteriores de “endurecer” a autenticação no frontend, incluindo chamadas assíncronas ao Supabase (`/auth/v1/user`), introduziram comportamento instável, difícil de depurar e incompatível com a arquitetura MVP (frontend estático, sem backend próprio).
+
+A ausência de um padrão rígido permitiu que páginas individuais implementassem variações de lógica de auth, gerando inconsistência sistêmica.
+
+### Decisão técnica
+Fica definido que:
+
+- O frontend **não valida tokens remotamente** no MVP
+- O frontend **não invalida sessão automaticamente**
+- O frontend **não remove tokens fora de logout explícito**
+- O controle de acesso é feito apenas por um `authGate` síncrono
+- O `authGate` deve ser o **primeiro script do `<body>`**
+- Nenhuma lógica de autenticação pode existir após `@@include` de layout
+
+Modelo canônico aprovado:
+
+```html
+<script>
+    (function authGate() {
+        const ACCESS_TOKEN = localStorage.getItem('sb_access_token');
+
+        if (!ACCESS_TOKEN) {
+            window.location.href = '/viang/login-viang.html';
+        }
+    })();
+</script>
+
+### Governança
+
+Foi criado e adotado o checklist `docs/checklist-pre-build-proven.md`, que passa a ser obrigatório antes de qualquer build ou deploy de página frontend. Qualquer página que viole esse checklist é considerada tecnicamente inválida.
+
+### Impacto
+
+- Eliminação de bugs de navegação intermitentes
+- Redução drástica de complexidade cognitiva
+- Sistema passa a depender de método documentado, não de memória humana
+- Facilita revisão automática por IA e auditoria futura
+
+### Status
+
+Decisão aprovada e aplicada.
+
+---
+
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*

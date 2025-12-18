@@ -372,4 +372,35 @@ Esse processo garantirá que os dados históricos dos últimos 30 dias sejam car
 
 ---
 
+## ChangeLog — Correção de navegação e estabilização de autenticação (Frontend)
+
+### Data
+2025-12-18
+
+### Contexto
+Foi identificado um bug persistente de navegação no frontend (HostGator), no qual páginas protegidas exibiam conteúdo por um breve instante e redirecionavam imediatamente para a tela de login. O problema ocorria de forma intermitente e difícil de rastrear, mesmo após limpeza de cache, rebuilds e testes em modo anônimo.
+
+### Persistência do erro
+O erro persistia porque não estava concentrado no login ou no dashboard principal, mas sim em páginas específicas (ex.: **Produtos**) que implementavam lógica própria de autenticação. Essas páginas:
+- Executavam validação assíncrona de sessão (`fetch /auth/v1/user`)
+- Invalidadavam e limpavam o `localStorage` automaticamente em caso de resposta não-OK
+- Redirecionavam para o login após a autenticação já ter ocorrido com sucesso
+
+Esse padrão fazia com que o token fosse criado corretamente no login, mas removido logo na primeira navegação subsequente, produzindo o efeito de “piscar e chutar”.
+
+### Mudanças adotadas
+- Padronização absoluta do mecanismo de autenticação no frontend
+- Remoção de qualquer validação assíncrona de sessão no MVP
+- Proibição de limpeza automática de `localStorage` fora do fluxo explícito de logout
+- Definição de um **authGate canônico, síncrono e minimalista**, baseado apenas na existência do token local
+- Reorganização estrutural das páginas para garantir que o `authGate` seja executado antes de qualquer `@@include` ou script de layout
+
+### Resultado
+A navegação tornou-se previsível, estável e reproduzível em todas as páginas, eliminando redirecionamentos inesperados e efeitos colaterais relacionados a estado de sessão.
+
+### Referências
+- Documento: `docs/checklist-pre-build-proven.md`
+
+---
+
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

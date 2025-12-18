@@ -5,6 +5,36 @@ O resultado esperado é **CHECK / NÃO CHECK**, sem interpretação.
 
 ---
 
+## 0️⃣ Regra Estrutural de Autenticação (OBRIGATÓRIA)
+
+- [ ] O `authGate` é o **primeiro script do `<body>`**
+- [ ] O `authGate` é **idêntico** ao modelo canônico abaixo
+- [ ] NÃO existe lógica de auth após qualquer `@@include`
+
+ÚNICO Modelo canônico permitido:
+
+```html
+<script>
+    (function authGate() {
+        const ACCESS_TOKEN = localStorage.getItem('sb_access_token');
+
+        if (!ACCESS_TOKEN) {
+            window.location.href = '/viang/login-viang.html';
+        }
+    })();
+</script>
+
+# Regras absolutas:
+
+- ❌ Não usar `async` no `authGate`
+- ❌ Não usar `fetch` no `authGate`
+- ❌ Não validar token remotamente
+- ❌ Não remover itens do `localStorage`
+- ❌ Não posicionar `authGate` após `@@include`
+
+---
+
+
 ## 1️⃣ Autenticação (Auth Gate)
 
 - [ ] A página possui `authGate`?
