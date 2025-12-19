@@ -11,32 +11,11 @@
 
 <body @@bodySetup>
     <script>
-        (async function authGate() {
-            const SUPABASE_URL = 'https://cbnisuoocsrhdqdpmips.supabase.co';
-            const LOGIN_URL = '/viang/login-viang.html';
+        (function authGate() {
+            const ACCESS_TOKEN = localStorage.getItem('sb_access_token');
 
-            const accessToken = localStorage.getItem('sb_access_token');
-
-            if (!accessToken) {
-                window.location.href = LOGIN_URL;
-                return;
-            }
-
-            try {
-                const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-
-                if (!res.ok) {
-                    localStorage.removeItem('sb_access_token');
-                    localStorage.removeItem('sb_refresh_token');
-                    window.location.href = LOGIN_URL;
-                }
-            } catch (e) {
-                window.location.href = LOGIN_URL;
+            if (!ACCESS_TOKEN) {
+                window.location.href = '/viang/login-viang.html';
             }
         })();
     </script>
@@ -108,19 +87,106 @@
                                 <div id="kpi-pior-queda-bar" class="progress-bar" role="progressbar" style="width: 0%">
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- CARD — Pior queda de vendas por vendedor -->
+                <div class="col-xl-4 col-lg-6 col-md-12">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Vendedores com maior queda</h5>
+                        </div>
+                        <div class="card-body d-flex align-items-center">
+                            <!-- Legenda -->
+                            <div class="me-4">
+                                <ul id="radial-vendedores-legend" class="list-unstyled mb-0">
+                                    <!-- preenchido via JS -->
+                                </ul>
+                            </div>
+
+                            <!-- Gráfico -->
+                            <div class="flex-grow-1">
+                                <div id="chart-pior-queda-vendedores" style="min-height: 260px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- CARD — Pior margem implícita por produto -->
+                <div class="col-xl-3 col-lg-4 col-md-12">
+                    <div class="card kpi-elevated">
+                        <div class="card-body d-flex flex-column justify-content-center py-4">
+
+                            <!-- Título -->
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <p class="mb-0 text-muted fw-bold">
+                                    Pior margem implícita
+                                </p>
+                                <i class="ti ti-alert-triangle text-warning"></i>
+                            </div>
+
+                            <!-- Valor principal -->
+                            <div class="text-center">
+                                <h1 id="kpi-pior-margem-valor" class="mb-0 display-4">
+                                    —
+                                </h1>
+                            </div>
+
+                            <!-- Subtexto -->
+                            <div class="text-center mt-2">
+                                <p id="kpi-pior-margem-label" class="mb-0 text-muted f-12">
+                                    —
+                                </p>
+                            </div>
+
+                            <!-- Barra de severidade -->
+                            <div class="progress mt-3" style="height: 6px;">
+                                <div id="kpi-pior-margem-bar" class="progress-bar" role="progressbar" style="width: 0%">
+                                </div>
+                            </div>
 
                         </div>
                     </div>
                 </div>
 
             </div>
-
             <!-- [ Main Content ] end -->
         </div>
     </section>
     <!-- [ Main Content ] end -->
+    <!-- ApexCharts (obrigatório para os gráficos) -->
+    <script src="../assets/js/plugins/apexcharts.min.js"></script>
+    <!-- Script da página -->
     <script>
         (function () {
+            /* =====================================================
+             *  CONFIG — SUPABASE EDGE FUNCTIONS
+             *  (copiado do dashboard.html)
+             * ===================================================== */
+            const SUPABASE_FN_BASE = 'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/produtos-dashboard';
+            const SUPABASE_ANON_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U`;
+            /* =====================================================
+             *  FETCH HELPER
+             * ===================================================== */
+            async function postJSON(path, payload) {
+                const res = await fetch(`${SUPABASE_FN_BASE}/${path}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    const msg = (data && (data.error || data.message)) ? (data.error || data.message) : `HTTP ${res.status}`;
+                    throw new Error(`[${path}] ${msg}`);
+                }
+
+                return data;
+            }
 
             /* =====================================================
              *  ESTADO GLOBAL DE PERÍODO
@@ -185,9 +251,8 @@
             });
 
             /* =====================================================
-             *  STUB TEMPORÁRIO
+             *  CARD — PIOR QUEDA DE VENDAS POR PRODUTO (SEMANA VS SEMANA)
              * ===================================================== */
-
             async function loadPiorQuedaProdutoSemana() {
                 try {
                     const rows = await postJSON(
@@ -199,34 +264,43 @@
 
                     const r = rows[0];
 
-                    const delta = Number(r.delta_volume || 0);
-                    const anterior = Math.max(Number(r.quantidade_semana_anterior || 0), 1);
-                    const pct = Math.min(100, Math.abs(delta) / anterior * 100);
+                    const pct = Math.min(
+                        100,
+                        Math.abs(Number(r.percentual_queda || 0))
+                    );
 
-                    // ELEMENTOS
                     const elValor = document.querySelector('#kpi-pior-queda-valor');
                     const elLabel = document.querySelector('#kpi-pior-queda-label');
                     const elBar = document.querySelector('#kpi-pior-queda-bar');
 
                     if (!elValor || !elLabel || !elBar) return;
 
-                    // TEXTO
-                    elValor.textContent = delta;
+                    /* ===============================
+                     * TEXTO
+                     * =============================== */
+                    elValor.textContent = `${Number(r.percentual_queda || 0).toFixed(2)}%`;
                     elLabel.textContent = `${r.product_title} — ${r.seller_name}`;
 
-                    // BARRA
+                    /* ===============================
+                     * BARRA
+                     * =============================== */
                     elBar.style.width = `${pct.toFixed(0)}%`;
 
-                    // COR (AdminDek via RGBA)
+                    /* ===============================
+                     * COR — PALETA ADMINDek (RGBA)
+                     * =============================== */
                     let color;
 
                     if (pct <= 5) {
-                        color = 'rgba(16, 185, 129, 0.25)'; // success pastel
+                        color = 'rgba(16, 185, 129, 0.25)';
                     } else if (pct <= 10) {
-                        color = 'rgba(245, 158, 11, 0.35)'; // warning pastel
+                        color = 'rgba(245, 158, 11, 0.35)';
                     } else {
-                        const alpha = Math.min(1, 0.4 + (pct - 10) / 90 * 0.6);
-                        color = `rgba(239, 68, 68, ${alpha.toFixed(2)})`; // danger progressivo
+                        const alpha = Math.min(
+                            1,
+                            0.4 + ((pct - 10) / 90) * 0.6
+                        );
+                        color = `rgba(239, 68, 68, ${alpha.toFixed(2)})`;
                     }
 
                     elBar.style.backgroundColor = color;
@@ -236,12 +310,266 @@
                 }
             }
 
+            /* =====================================================
+             *  CARD — PIOR QUEDA DE VENDAS POR VENDEDOR (SEMANA VS SEMANA)
+             *  RadialBar — Custom Angle (0º → 90º)
+             * ===================================================== */
 
+            let chartPiorQuedaVendedores;
+
+            async function loadPiorQuedaVendedoresSemana() {
+                try {
+                    // Este card SEMPRE usa semana fechada (hoje-7 vs semana anterior)
+                    // Não obedece ao seletor global por decisão de negócio
+                    const fixedPeriod = {
+                        type: 'preset',
+                        preset: '7d',
+                        start_date: null,
+                        end_date: null
+                    };
+
+                    const rows = await postJSON(
+                        'alerts-pior-queda-vendedores',
+                        fixedPeriod
+                    );
+                    /* ===============================
+                     * DEBUG — CARD: VENDEDORES COM MAIOR QUEDA
+                     * =============================== */
+                    console.group('[DEBUG][Card Vendedores com Maior Queda]');
+
+                    console.log('DASHBOARD_PERIOD enviado:', window.DASHBOARD_PERIOD);
+
+                    console.log('Resposta bruta (rows):', rows);
+                    console.log('Tipo de rows:', typeof rows);
+                    console.log('É array?', Array.isArray(rows));
+                    console.log('Length:', rows?.length);
+
+                    if (!rows || !Array.isArray(rows) || !rows.length) {
+                        console.warn('❌ rows vazio ou inválido — abortando render do card');
+                        console.groupEnd();
+                        return;
+                    }
+
+                    // Não filtrar null: vendedor continua válido mesmo sem % calculável
+                    const top = rows.slice(0, 3);
+                    // Garantir sempre 3 slots visuais (mesmo sem dados comparáveis)
+                    while (top.length < 3) {
+                        top.push({
+                            seller_name: '—',
+                            percentual_queda: null,
+                            delta_volume: null
+                        });
+                    }
+
+                    console.log('TOP selecionado (sem filtro de percentual):', top);
+
+                    console.log('TOP selecionado:', top);
+
+                    top.forEach((r, i) => {
+                        console.log(`TOP[${i}]`, {
+                            seller_name: r.seller_name,
+                            percentual_queda: r.percentual_queda,
+                            delta_volume: r.delta_volume
+                        });
+                    });
+
+                    console.groupEnd();
+                    /* ===============================
+                     * FIM DEBUG
+                     * =============================== */
+
+
+                    if (!top.length) return;
+
+                    const labels = top.map(r => r.seller_name);
+                    const values = top.map(r =>
+                        r.percentual_queda === null || r.percentual_queda === undefined
+                            ? 0
+                            : Math.abs(Number(r.percentual_queda))
+                    );
+
+                    /* ===============================
+                     * CORES — ESCALA DE VERMELHO
+                     * =============================== */
+                    const colors = values.map(v => {
+                        // alpha progressivo: 10% → 0.4 | 100% → 1
+                        const alpha = Math.min(1, 0.4 + (v / 100) * 0.6);
+                        return `rgba(239, 68, 68, ${alpha.toFixed(2)})`;
+                    });
+
+                    /* ===============================
+                     * LEGENDA (ESQUERDA)
+                     * =============================== */
+                    const legendEl = document.querySelector('#radial-vendedores-legend');
+                    if (legendEl) {
+                        legendEl.innerHTML = '';
+
+                        top.forEach((r, i) => {
+                            const li = document.createElement('li');
+                            li.className = 'mb-2 d-flex align-items-center';
+
+                            const isPlaceholder = r.seller_name === '—';
+
+                            const pctTxt =
+                                r.percentual_queda === null || r.percentual_queda === undefined
+                                    ? '—'
+                                    : `${Number(r.percentual_queda).toFixed(2)}%`;
+
+                            li.style.opacity = isPlaceholder ? '0.4' : '1';
+
+                            li.innerHTML = `
+                                <span style="
+                                    display:inline-block;
+                                    width:10px;
+                                    height:10px;
+                                    background:${colors[i]};
+                                    border-radius:50%;
+                                    margin-right:8px;
+                                "></span>
+                                <span class="text-muted">
+                                    <strong>${r.seller_name}</strong>: ${pctTxt}
+                                </span>
+                            `;
+
+                            legendEl.appendChild(li);
+                        });
+                    }
+
+
+                    /* ===============================
+                     * CONFIG APEX — RADIALBAR
+                     * =============================== */
+                    const options = {
+                        chart: {
+                            type: 'radialBar',
+                            height: 130
+                        },
+                        series: values,
+                        labels: labels,
+                        colors: colors,
+
+                        plotOptions: {
+                            radialBar: {
+                                startAngle: 0,
+                                endAngle: 360,
+                                hollow: {
+                                    size: '55%'
+                                },
+                                track: {
+                                    background: '#f3f4f6'
+                                },
+                                dataLabels: {
+                                    show: false
+                                }
+                            }
+                        },
+
+                        tooltip: {
+                            enabled: true,
+                            followCursor: true,
+                            intersect: false,
+                            y: {
+                                formatter: function (val, opts) {
+                                    const r = top[opts.seriesIndex];
+
+                                    const pctTxt =
+                                        r.percentual_queda === null || r.percentual_queda === undefined
+                                            ? '—'
+                                            : `${Number(r.percentual_queda).toFixed(2)}%`;
+
+                                    return `${r.seller_name}: ${pctTxt}`;
+                                }
+                            }
+                        }
+                    };
+
+                    if (chartPiorQuedaVendedores) {
+                        chartPiorQuedaVendedores.updateOptions(options);
+                    } else {
+                        chartPiorQuedaVendedores = new ApexCharts(
+                            document.querySelector('#chart-pior-queda-vendedores'),
+                            options
+                        );
+                        chartPiorQuedaVendedores.render();
+                    }
+
+                } catch (e) {
+                    console.error('[Card Pior Queda Vendedores]', e);
+                }
+            }
+            /* =====================================================
+             *  CARD — PIOR MARGEM IMPLÍCITA POR PRODUTO
+             * ===================================================== */
+            async function loadPiorMargemImplicitaProduto() {
+                try {
+                    const rows = await postJSON(
+                        'alerts-pior-margem-produto',
+                        window.DASHBOARD_PERIOD
+                    );
+
+                    if (!rows || !rows.length) return;
+
+                    const r = rows[0];
+
+                    const pctMargem = Math.max(
+                        0,
+                        Math.min(100, Number(r.margem_percentual || 0))
+                    );
+
+                    const elValor = document.querySelector('#kpi-pior-margem-valor');
+                    const elLabel = document.querySelector('#kpi-pior-margem-label');
+                    const elBar = document.querySelector('#kpi-pior-margem-bar');
+
+                    if (!elValor || !elLabel || !elBar) return;
+
+                    /* ===============================
+                     * TEXTO
+                     * =============================== */
+                    elValor.textContent = `${pctMargem.toFixed(2)}%`;
+                    elLabel.innerHTML = `${r.product_title} — <strong>${r.seller_name}</strong>`;
+
+                    /* ===============================
+                     * BARRA
+                     * =============================== */
+                    // quanto menor a margem, maior a severidade
+                    const severity = Math.min(100, (60 - pctMargem) * (100 / 60));
+                    elBar.style.width = `${Math.max(0, severity).toFixed(0)}%`;
+
+                    /* ===============================
+                     * COR — MARGEM
+                     * =============================== */
+                    let color;
+
+                    if (pctMargem <= 50) {
+                        color = 'rgba(239, 68, 68, 0.85)';   // vermelho
+                    } else if (pctMargem <= 60) {
+                        color = 'rgba(245, 158, 11, 0.7)';   // laranja
+                    } else {
+                        color = 'rgba(245, 158, 11, 0.35)';  // âmbar (ainda alerta)
+                    }
+
+                    elBar.style.backgroundColor = color;
+                    elValor.style.color = color;
+
+                } catch (e) {
+                    console.error('[Card Pior Margem Produto]', e);
+                }
+            }
+
+            /* =====================================================
+             *  RELOAD ALL
+             * ===================================================== */
             function reloadAll() {
+                console.log('[Produtos] reloadAll disparado');
                 loadPiorQuedaProdutoSemana();
+                loadPiorQuedaVendedoresSemana();
+                loadPiorMargemImplicitaProduto();
             }
 
             setActivePresetButton('30d');
+            updatePeriodBadges();
+            reloadAll();
+
 
         })();
     </script>
