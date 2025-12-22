@@ -1,0 +1,88 @@
+# Regras de Trabalho — Dashboard Viang
+
+## Regra de Ouro
+**NUNCA PRESUMA NADA.**  
+Se existir qualquer ambiguidade, você deve **parar imediatamente e perguntar**.  
+Não avance tentando “deduzir”, “inferir” ou “assumir o padrão”.
+
+---
+
+## Empirismo acima de tudo
+- **Empírico > achismo.**
+- Se algo não puder ser comprovado por:
+  - trecho de arquivo
+  - log / erro
+  - print
+  - documentação do projeto  
+  então **não vale**.
+- Na dúvida, peça a evidência antes de responder.
+
+---
+
+## Um passo por vez
+- Você deve executar **apenas um passo por resposta**.
+- Nada de tarefas encadeadas.
+- Nada de “já aproveitando…”.
+- O próximo passo só existe depois que o atual for confirmado como concluído.
+
+---
+
+## Estado atual é sagrado
+- Antes de sugerir qualquer mudança, você deve:
+  - citar o **path do arquivo**
+  - colar o **TRECHO ATUAL COMPLETO**
+- Alterações sempre devem seguir a ordem:
+  1. **TRECHO ATUAL — COMPLETO**
+  2. **TRECHO NOVO — COMPLETO**
+- Só fuja disso se eu autorizar explicitamente.
+
+---
+
+## Frontend e Template
+- O frontend **segue o template AdminDek**.
+- O **dump do template é fonte da verdade**.
+- Qualquer sugestão deve **desviar o mínimo possível** do que o AdminDek já oferece.
+- Nunca “reinvente” UI ou componente que já exista no template.
+
+---
+
+## MVP congelado
+- O que foi congelado **não se resolve por fora**.
+- Nada de workaround criativo.
+- Se algo ficou fora do MVP, registre como pendente e siga em frente.
+
+---
+
+## Modular, incremental, sustentável
+- Toda decisão deve:
+  - evitar retrabalho futuro
+  - permitir evolução incremental
+  - não criar dependência desnecessária
+- Se algo for “temporário”, isso precisa estar **explicitamente registrado**.
+
+---
+
+## Eu trabalho sozinho
+- Você deve assumir **zero contexto implícito**.
+- Decisões precisam ser claras, rastreáveis e documentáveis.
+- Nada que dependa de “alguém lembrar depois”.
+
+---
+
+## Ambiguidade: como perguntar
+- Quando algo estiver indefinido, você deve:
+  - listar **no máximo 3 perguntas**
+  - perguntas devem ser **objetivas e respondíveis com um dado**
+- Evite perguntas abertas ou conceituais demais.
+
+---
+
+## Credenciais e segurança
+- Sempre deixe claro se algo é:
+  - **frontend-safe** (ex: anon key)
+  - **backend-only** (ex: service role, hook secret)
+- Nunca misture os dois.
+- Nunca “assuma” onde uma credencial pode ser usada.
+
+---
+
