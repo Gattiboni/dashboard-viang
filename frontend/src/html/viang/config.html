@@ -9,6 +9,16 @@
 <!-- [Head] end -->
 
 <body @@bodySetup>
+    <script>
+        (function authGate() {
+            const ACCESS_TOKEN = localStorage.getItem('sb_access_token');
+
+            if (!ACCESS_TOKEN) {
+                window.location.href = '/viang/login-viang.html';
+            }
+        })();
+    </script>
+
     @@include('../layouts/layout-vertical-viang.html')
 
     <!-- [ Main Content ] start -->
