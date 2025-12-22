@@ -403,4 +403,35 @@ A navegação tornou-se previsível, estável e reproduzível em todas as págin
 
 ---
 
+## v1.5.0 — 2025-12-22  
+### Frontend: Consolidação do MVP e Estabilização Final das Páginas
+
+### Adicionado  
+- Página **Configurações** criada e integrada ao frontend, com:
+  - Estrutura baseada no template Admindek (`forms/form2_basic.html`)
+  - Exibição consultiva dos usuários do sistema (`dashboard.users`)
+  - Consumo via Edge Function dedicada (`users-config`)
+- Página **Logs / ETL** criada e integrada ao frontend, baseada em `table/tbl_dt-simple.html`, preparada para exibição cumulativa de logs técnicos do sistema.
+- Edge Function **`users-config`** criada para leitura segura e centralizada dos dados de usuários no MVP.
+- Registro formal de entrega do MVP parcial, documentando estado real de cada módulo.
+
+### Alterado  
+- Padronização estrutural das páginas frontend para garantir:
+  - Execução do `authGate` síncrono antes de qualquer lógica ou include
+  - Comportamento consistente entre ambiente de desenvolvimento e build de produção (`/dist`)
+- Ajustes finos na página **Configurações** para alinhar comportamento em produção com o Dashboard (resolução de divergência pós-build).
+
+### Corrigido  
+- Inconsistências de carregamento de scripts e execução de JS em páginas específicas após build.
+- Divergência entre comportamento em desenvolvimento e produção causada por ausência do `authGate` em páginas novas.
+
+### Impacto  
+- MVP frontend passa a operar de forma estável e previsível em produção.
+- Todas as páginas principais previstas no wireframe v2 estão presentes ao menos em nível estrutural.
+- Redução significativa de risco técnico antes da sinalização formal de entrega.
+- Base pronta para evolução incremental pós-MVP, sem necessidade de refactors estruturais.
+
+---
+
+
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

@@ -664,4 +664,33 @@ Decisão aprovada e aplicada.
 
 ---
 
+### Decisão 023 — 2025-12-22  
+#### MVP com Páginas Estruturais Completas e Funcionalidade Parcial Dependente de Integrações Externas
+
+**Contexto**  
+Durante a consolidação final do MVP, ficou evidente que diversos módulos do Dashboard Viang dependem diretamente de integrações externas (ERPs, APIs de Ads, permissões de contas) que não estavam disponíveis ou plenamente autorizadas no momento da entrega. Ao mesmo tempo, a arquitetura, o frontend e o backend já se encontravam tecnicamente sólidos e alinhados ao wireframe aprovado.
+
+**Decisão**  
+Considerar o MVP como **estruturalmente completo**, com as seguintes diretrizes explícitas:
+
+- Páginas **Dashboard** e **Produtos** totalmente funcionais e estáveis.
+- Páginas **Clientes**, **Financeiro**, **Publicidade** e **Configurações** entregues em estado estrutural, prontas para ativação funcional conforme integrações externas sejam liberadas.
+- Página **Logs / ETL** funcional e preparada para crescimento cumulativo de dados.
+- Nenhuma lógica provisória ou workaround será implementada para “simular” dados ausentes.
+
+**Motivos**  
+- Evitar dívida técnica criada por dados falsos, placeholders enganosos ou lógicas temporárias.
+- Preservar a clareza do MVP como base sólida, não como produto incompleto disfarçado.
+- Manter coerência com a arquitetura modular e incremental definida desde o início do projeto.
+- Garantir que toda funcionalidade ativada tenha lastro em dados reais e integrações válidas.
+
+**Impacto**  
+- O MVP atinge aproximadamente **85% do escopo funcional planejado**, com 100% da base arquitetural pronta.
+- Evolução futura passa a depender majoritariamente de integrações externas e decisões de negócio, não de reestruturação técnica.
+- Facilita comunicação transparente de status com stakeholders e evita expectativas irreais.
+- Projeto permanece sustentável, documentado e preparado para expansão sem retrabalho.
+
+---
+
+
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
