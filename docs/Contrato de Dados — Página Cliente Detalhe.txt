@@ -1,0 +1,416 @@
+# Contrato de Dados — Página **Cliente Detalhe**
+
+> **Escopo**: Este documento define, de forma explícita e fechada, o contrato de dados da página `cliente-detalhe.html`.
+>
+> Inclui:
+>
+> * RPC por componente
+> * Campos utilizados (nomes exatos)
+> * Origem dos dados conforme **Dicionário de Dados — Schema dashboard**
+>
+> Premissas arquiteturais:
+>
+> * Nenhuma RPC global será modificada
+> * Todas as RPCs novas são específicas de cliente (`*_cliente`)
+> * O parâmetro `p_client_id` é **obrigatório** em todas as RPCs deste contrato
+> * A página **Cliente Detalhe é exclusivamente analítica**
+> * Nenhum dado cadastral é editado ou persistido nesta página
+> * O identificador do cliente (`client_id`) é recebido **exclusivamente** via drilldown da página **Clientes**
+
+---
+
+## Resolução de Cliente (Identidade e Nome)
+
+### Origem do `client_id`
+
+* O `client_id` é originado da tabela `dashboard.api_tokens`
+* É transmitido para a página Cliente Detalhe via drilldown da página **Clientes**
+* Nenhuma outra fonte de identificação de cliente é utilizada
+
+### Resolução do nome do cliente (`display_name`)
+
+* O nome do cliente utilizado na interface (títulos, subtítulos e breadcrumb) é o campo:
+
+  * `dashboard.api_tokens.display_name`
+* A resolução do nome **não é feita via métricas ou views analíticas**
+* O nome do cliente deve ser buscado por uma consulta simples filtrando por `client_id`
+
+### Uso na interface
+
+* O `display_name` deve ser aplicado em:
+
+  * Título da página
+  * Subtítulo contextual
+  * Breadcrumb (quando suportado dinamicamente pelo template)
+
+> Observação: o breadcrumb pode ser atualizado dinamicamente no frontend
+> desde que **não altere a estrutura do breadcrumb base** definida pelo template
+
+---
+
+## Parâmetros comuns (todas as RPCs)
+
+```sql
+p_client_id   uuid
+p_start_date  date
+p_end_date    date
+```
+
+---
+
+## 1. KPI — Receita Bruta (Cliente)
+
+**RPC**
+
+```sql
+fn_kpi_receita_bruta_cliente
+```
+
+**Campos retornados**
+
+| Campo | Tipo    |
+| ----- | ------- |
+| total | numeric |
+
+**Origem dos dados**
+
+* View: `vw_ml_client_day_enriched`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `receita_bruta`
+
+---
+
+## 2. KPI — Ticket Médio (Cliente)
+
+**RPC**
+
+```sql
+fn_kpi_ticket_medio_cliente
+```
+
+**Campos retornados**
+
+| Campo | Tipo    |
+| ----- | ------- |
+| total | numeric |
+
+**Origem dos dados**
+
+* View: `vw_ml_client_day_enriched`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `ticket_medio`
+
+---
+
+## 3. Card — Produtos com Maior Queda (Semanal)
+
+**RPC**
+
+```sql
+fn_pior_queda_produtos_semana_cliente
+```
+
+**Campos retornados**
+
+| Campo                      | Tipo    |
+| -------------------------- | ------- |
+| product_title              | text    |
+| seller_name                | text    |
+| quantidade_semana_anterior | numeric |
+| percentual_queda           | numeric |
+
+**Origem dos dados**
+
+* Função base: `fn_pior_queda_produtos_semana`
+* Tabela base: `fact_sku_day`
+
+**Campos utilizados da tabela**
+
+* `client_id`
+* `data`
+* `sku`
+* `quantidade_vendida`
+
+---
+
+## 4. Receita por Semana
+
+**RPC**
+
+```sql
+fn_chart_receita_por_semana_cliente
+```
+
+**Campos retornados**
+
+| Campo | Tipo    |
+| ----- | ------- |
+| data  | date    |
+| sum   | numeric |
+
+**Origem dos dados**
+
+* View: `vw_receita_semanal_por_cliente`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `semana_inicio`
+* `receita_total`
+
+---
+
+## 5. Pedidos por Dia
+
+**RPC**
+
+```sql
+fn_chart_pedidos_por_dia_cliente
+```
+
+**Campos retornados**
+
+| Campo | Tipo    |
+| ----- | ------- |
+| data  | date    |
+| sum   | numeric |
+
+**Origem dos dados**
+
+* View: `vw_ml_client_day_enriched`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `pedidos`
+
+---
+
+## 6. Unidades por Categoria
+
+**RPC**
+
+```sql
+fn_chart_unidades_categoria_cliente
+```
+
+**Campos retornados**
+
+| Campo         | Tipo    |
+| ------------- | ------- |
+| category_name | text    |
+| sum           | numeric |
+
+**Origem dos dados**
+
+* View: `vw_ml_category_day_enriched`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `category_name`
+* `unidades_vendidas`
+
+---
+
+## 7. Distribuição por Categoria
+
+**RPC**
+
+```sql
+fn_chart_distribuicao_categoria_cliente
+```
+
+**Campos retornados**
+
+| Campo         | Tipo    |
+| ------------- | ------- |
+| category_name | text    |
+| sum           | numeric |
+
+**Origem dos dados**
+
+* View: `vw_ml_category_day_enriched`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `category_name`
+* `receita_bruta`
+
+---
+
+## 8. Top 5 SKUs
+
+**RPC**
+
+```sql
+fn_chart_top_skus_cliente
+```
+
+**Campos retornados**
+
+| Campo         | Tipo    |
+| ------------- | ------- |
+| product_title | text    |
+| unidades      | numeric |
+| receita       | numeric |
+
+**Origem dos dados**
+
+* View: `vw_ml_top_skus`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `product_title`
+* `unidades_vendidas`
+* `receita_bruta`
+
+---
+
+## 9. Margem Operacional Implícita por Produto
+
+**RPC**
+
+```sql
+fn_margem_operacional_por_produto_cliente
+```
+
+**Campos retornados**
+
+| Campo                       | Tipo    |
+| --------------------------- | ------- |
+| product_title               | text    |
+| seller_name                 | text    |
+| volume_vendido              | numeric |
+| receita_total               | numeric |
+| margem_implicita_percentual | numeric |
+
+**Origem dos dados**
+
+* Função base: `fn_margem_operacional_por_produto`
+* View: `vw_produto_performance`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `product_title`
+* `seller_name`
+* `quantidade_vendida`
+* `receita_bruta`
+* `custo_produto`
+* `custo_frete`
+* `custo_comissao`
+* `custo_operacional`
+
+---
+
+## 10. Curva ABC de Produtos por Categoria
+
+**RPC**
+
+```sql
+fn_curva_abc_produtos_cliente
+```
+
+**Campos retornados**
+
+| Campo                | Tipo    |
+| -------------------- | ------- |
+| product_title        | text    |
+| category_id          | text    |
+| category_name        | text    |
+| receita_total        | numeric |
+| receita_acumulada    | numeric |
+| percentual_acumulado | numeric |
+| classificacao_abc    | text    |
+
+**Origem dos dados**
+
+* Função base: `fn_curva_abc_produtos`
+* View: `vw_produto_performance`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `product_title`
+* `category_id`
+* `category_name`
+* `receita_bruta`
+
+---
+
+## 11. Tabelão da Verdade (Produtos por Cliente)
+
+**RPC**
+
+```sql
+fn_tabelao_produtos_cliente
+```
+
+**Campos retornados**
+
+| Campo                       | Tipo    |
+| --------------------------- | ------- |
+| product_title               | text    |
+| category_name               | text    |
+| quantidade_vendida          | numeric |
+| receita                     | numeric |
+| margem_implicita_percentual | numeric |
+| delta_receita_pct           | numeric |
+| status_visual               | text    |
+
+**Origem dos dados**
+
+* Função base: `fn_tabelao_produtos`
+* View: `vw_produto_performance`
+
+**Campos utilizados da view**
+
+* `client_id`
+* `data`
+* `product_title`
+* `category_name`
+* `quantidade_vendida`
+* `receita_bruta`
+* `lucro`
+
+---
+
+## Resolução de Rota e Navegação
+
+* A navegação definida como `/clientes/:client_id` é resolvida no frontend como:
+
+```text
+cliente-detalhe.html?client_id=:client_id
+```
+
+* Não existe rota REST ativa `/clientes/:client_id`
+* O identificador é tratado exclusivamente no frontend e nas Edge Functions
+
+---
+
+## Observações finais
+
+* Todas as RPCs listadas acima **não existem atualmente** e deverão ser criadas no schema `dashboard`
+* Nenhuma RPC global existente será alterada
+* A Edge Function responsável por orquestrar estas RPCs será:
+
+```text
+supabase/functions/cliente-detalhe/index.ts
+```
+
+* O contrato acima é considerado **fonte de verdade** para implementação SQL e Edge

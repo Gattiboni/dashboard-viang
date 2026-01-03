@@ -1,0 +1,217 @@
+# Contrato Final — Página Clientes
+
+## Módulo: Clientes
+
+Página: `/clientes`
+Template-base: `table/dt_basic.html`
+Status: MVP — Operacional / Cadastro
+Idioma: PT-BR
+
+---
+
+## 1. Objetivo da Página
+
+Centralizar **todos os clientes cadastrados no sistema**, usando **exclusivamente dados cadastrais provenientes da API do Mercado Livre**, permitindo:
+
+* Visualização completa dos dados de cadastro
+* Seleção individual ou em massa de clientes
+* Edição manual controlada dos campos
+* Drilldown direto para a página de **Cliente Detalhe**
+
+Esta página **não é analítica**. É **cadastro operacional**.
+
+---
+
+## 2. Fontes de Dados (Fonte da Verdade)
+
+### 2.1 Fonte única (MVP)
+
+**Tabela:** `dashboard.api_tokens`
+**Filtro obrigatório:** `platform = 'mercado_livre'`
+
+Motivo:
+
+* A API do Mercado Livre é a **única fonte ativa e autorizada no MVP**.
+* Todos os campos exibidos existem fisicamente no schema.
+* Nenhuma inferência ou agregação é aplicada.
+
+---
+
+## 3. Contrato de Dados — Colunas da Tabela
+
+### 3.1 Identificação interna
+
+| Campo          | Descrição                                   |
+| -------------- | ------------------------------------------- |
+| `client_id`    | Identificador interno do cliente (UUID)     |
+| `user_id`      | ID do vendedor no Mercado Livre (seller_id) |
+| `display_name` | Nome exibido do cliente                     |
+
+---
+
+### 3.2 Identidade pública Mercado Livre
+
+| Campo           | Descrição                    |
+| --------------- | ---------------------------- |
+| `ml_nickname`   | Nickname público do vendedor |
+| `ml_first_name` | Primeiro nome cadastrado     |
+| `ml_last_name`  | Sobrenome cadastrado         |
+
+---
+
+### 3.3 Contato
+
+| Campo      | Descrição           |
+| ---------- | ------------------- |
+| `ml_email` | Email cadastrado    |
+| `ml_phone` | Telefone cadastrado |
+
+---
+
+### 3.4 Status e reputação
+
+| Campo              | Descrição              |
+| ------------------ | ---------------------- |
+| `ml_seller_status` | Status do vendedor     |
+| `ml_points`        | Pontuação de reputação |
+
+---
+
+### 3.5 Plataforma
+
+| Campo           | Descrição                       |
+| --------------- | ------------------------------- |
+| `ml_site_id`    | Site do Mercado Livre (ex: MLB) |
+| `ml_perma_link` | URL pública da loja             |
+| `ml_logo`       | URL do avatar/logo              |
+
+---
+
+### 3.6 Controle de integração
+
+| Campo        | Descrição                                           |
+| ------------ | --------------------------------------------------- |
+| `status`     | Status da integração (`active`, `pending`, `error`) |
+| `expires_at` | Expiração do token                                  |
+
+---
+
+**Total de colunas no MVP:** 15
+
+---
+
+## 4. Estrutura da Página (UI)
+
+### 4.1 Layout
+
+* Um único card
+* Uma única tabela
+* Estilo: **Base Style — Compact**
+* Scroll horizontal permitido
+
+---
+
+### 4.2 Ações de Topo
+
+| Ação             | Comportamento                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| **Novo Cliente** | Botão no topo direito. Inicia fluxo de onboarding (fora do escopo deste contrato). |
+| **Editar**       | Habilita modo de edição global da tabela.                                          |
+
+---
+
+### 4.3 Seleção de Linhas
+
+* Checkbox por linha
+* Checkbox global (selecionar todos)
+* Seleção não altera dados automaticamente
+
+---
+
+## 5. Comportamento de Edição
+
+### 5.1 Modo de edição
+
+* Edição **desabilitada por padrão**
+* Ativada apenas via botão **Editar**
+* Todas as células tornam-se editáveis
+
+### 5.2 Confirmação
+
+* Fluxo de confirmação dupla antes de persistir alterações
+* Nenhuma alteração é salva automaticamente
+
+---
+
+## 6. Drilldown
+
+* Clique na linha redireciona para `/clientes/:client_id`
+* Página de destino: **Cliente Detalhe**
+* Nenhum dado adicional é calculado aqui
+
+---
+
+## 7. Edge Function
+
+### 7.1 Obrigatoriedade
+
+A página `/clientes` deve possuir **1 Edge Function dedicada**.
+
+---
+
+### 7.2 Responsabilidades (MVP)
+
+* Listar registros de `dashboard.api_tokens`
+* Filtrar por `platform = 'mercado_livre'`
+* Retornar array JSON
+* Ordenar por `display_name`
+
+### 7.3 Restrições
+
+* Nenhuma agregação
+* Nenhuma métrica
+* Nenhuma inferência
+* Nenhuma lógica de negócio
+
+---
+
+## 8. Fora de Escopo (MVP)
+
+Explícita e propositalmente fora:
+
+* Dados de ERP
+* Métricas financeiras
+* Status analíticos
+* Ads / Publicidade
+* Filtros avançados
+* Busca full-text
+* Importação em massa
+* Soft delete / hard delete
+
+---
+
+## 9. Decisões Pós-MVP (Não agora)
+
+Avaliar futuramente:
+
+* Integração com ERP
+* Enriquecimento cadastral
+* Versionamento de alterações
+* Histórico de edição
+* Validações automáticas
+
+> ⚠️ Nada disso entra no MVP.
+> Só será considerado com evidência real de necessidade.
+
+---
+
+## 10. Critério de Pronto (DoD)
+
+A página `/clientes` é considerada pronta quando:
+
+1. Lista dados reais do Mercado Livre.
+2. Usa apenas `dashboard.api_tokens`.
+3. Permite seleção e edição controlada.
+4. Possui drilldown funcional.
+5. Não aplica nenhuma lógica analítica.
+6. Mantém compatibilidade total com o template Admindek.

@@ -1,0 +1,148 @@
+DROP VIEW IF EXISTS dashboard.vw_data_dictionary_markdown;
+
+
+---
+
+CREATE VIEW dashboard.vw_data_dictionary_markdown AS
+WITH
+rel_objects AS (
+  SELECT
+    c.relname AS object_name,
+    CASE c.relkind
+      WHEN 'r' THEN 'table'
+      WHEN 'v' THEN 'view'
+      WHEN 'm' THEN 'materialized view'
+    END AS object_type
+  FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'dashboard'
+    AND c.relkind IN ('r','v','m')
+),
+
+fn_objects AS (
+  SELECT DISTINCT
+    p.proname AS object_name,
+    'function'::text AS object_type
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'dashboard'
+),
+
+objects AS (
+  SELECT * FROM rel_objects
+  UNION ALL
+  SELECT * FROM fn_objects
+),
+
+index_md AS (
+  SELECT
+    1 AS ord,
+    '# Data Dictionary — Schema dashboard
+
+## Sumário
+' ||
+    string_agg(
+      '- [' || object_name || '](#' || object_name || ')',
+      E'\n'
+      ORDER BY object_name
+    )
+    AS markdown_doc
+  FROM objects
+),
+
+rel_md AS (
+  SELECT
+    row_number() OVER (ORDER BY o.object_name) + 1 AS ord,
+    E'\n\n## ' || o.object_name || E'\n' ||
+    '| Coluna | Tipo | Nullable | Default |' || E'\n' ||
+    '| ------ | ---- | -------- | ------- |' || E'\n' ||
+    string_agg(
+      '| ' || c.column_name ||
+      ' | ' || c.data_type ||
+      ' | ' || c.is_nullable ||
+      ' | ' || COALESCE(NULLIF(c.column_default,''), '—') || ' |',
+      E'\n'
+      ORDER BY c.ordinal_position
+    )
+    AS markdown_doc
+  FROM rel_objects o
+  JOIN information_schema.columns c
+    ON c.table_schema = 'dashboard'
+   AND c.table_name   = o.object_name
+  GROUP BY o.object_name
+),
+
+fn_rows AS (
+  SELECT
+    p.proname AS fn_name,
+    CASE
+      WHEN mode IN ('i','v') THEN 1
+      WHEN mode IN ('o','t') THEN 2
+      ELSE 1
+    END AS group_ord,
+    arg_ord,
+    COALESCE(arg_name, 'arg_' || arg_ord::text) AS col_name,
+    pg_catalog.format_type(arg_type, NULL) AS col_type
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  JOIN LATERAL (
+    SELECT
+      gs.i AS arg_ord,
+      CASE
+        WHEN p.proallargtypes IS NOT NULL THEN p.proallargtypes[gs.i]
+        ELSE p.proargtypes[gs.i]
+      END AS arg_type,
+      CASE
+        WHEN p.proargnames IS NOT NULL THEN p.proargnames[gs.i]
+        ELSE NULL::text
+      END AS arg_name,
+      CASE
+        WHEN p.proallargtypes IS NOT NULL AND p.proargmodes IS NOT NULL THEN p.proargmodes[gs.i]
+        ELSE 'i'::"char"
+      END AS mode
+    FROM generate_subscripts(
+      CASE
+        WHEN p.proallargtypes IS NOT NULL THEN p.proallargtypes
+        ELSE p.proargtypes
+      END, 1
+    ) gs(i)
+  ) a ON TRUE
+  WHERE n.nspname = 'dashboard'
+),
+
+fn_md AS (
+  SELECT
+    row_number() OVER (ORDER BY f.fn_name) + (SELECT max(ord) FROM rel_md) AS ord,
+    E'\n\n## ' || f.fn_name || E'\n' ||
+    '| Coluna | Tipo | Nullable | Default |' || E'\n' ||
+    '| ------ | ---- | -------- | ------- |' || E'\n' ||
+    string_agg(
+      '| ' || f.col_name ||
+      ' | ' || f.col_type ||
+      ' | — | — |',
+      E'\n'
+      ORDER BY f.group_ord, f.arg_ord
+    )
+    AS markdown_doc
+  FROM fn_rows f
+  GROUP BY f.fn_name
+),
+
+all_md AS (
+  SELECT * FROM index_md
+  UNION ALL
+  SELECT * FROM rel_md
+  UNION ALL
+  SELECT * FROM fn_md
+)
+
+SELECT markdown_doc
+FROM all_md
+ORDER BY ord;
+
+
+---
+
+
+SELECT *
+FROM dashboard.vw_data_dictionary_markdown;
