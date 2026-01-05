@@ -76,6 +76,53 @@ async function rpcCliente(fn: string, client_id: string, period: DashboardPeriod
 }
 
 /* =====================================================
+ *  SAÚDE OPERACIONAL — agregação no backend (contagens)
+ * ===================================================== */
+
+async function loadSaudeOperacional(client_id: string, period: DashboardPeriod) {
+    console.log("[cliente-detalhe][saude-operacional] start", {
+        client_id,
+        period,
+    });
+
+    const gargalosRows = await rpcCliente(
+        "fn_gargalos_operacionais_por_sku_cliente",
+        client_id,
+        period
+    );
+
+    const riscoRows = await rpcCliente(
+        "fn_risco_operacional_por_sku_cliente",
+        client_id,
+        period
+    );
+
+    // Contagem distinta por sku (sem inferir colunas extras)
+    const gargalosSet = new Set(
+        (gargalosRows ?? []).map((r: any) => String(r?.sku ?? ""))
+            .filter((v: string) => v.length > 0)
+    );
+
+    const riscoSet = new Set(
+        (riscoRows ?? []).map((r: any) => String(r?.sku ?? ""))
+            .filter((v: string) => v.length > 0)
+    );
+
+    const payload = {
+        gargalos_operacionais: gargalosSet.size,
+        skus_em_risco: riscoSet.size,
+    };
+
+    console.log("[cliente-detalhe][saude-operacional] done", {
+        gargalos_rows: (gargalosRows ?? []).length,
+        risco_rows: (riscoRows ?? []).length,
+        payload,
+    });
+
+    return payload;
+}
+
+/* =====================================================
  *  SERVER
  * ===================================================== */
 
@@ -120,6 +167,12 @@ serve(async (req) => {
             end_date: body?.end_date ?? null,
         };
 
+        console.log("[cliente-detalhe] request", {
+            route,
+            client_id,
+            period,
+        });
+
         const map: Record<string, () => Promise<any>> = {
             // KPIs
             "kpi-receita-bruta": () =>
@@ -127,6 +180,16 @@ serve(async (req) => {
 
             "kpi-ticket-medio": () =>
                 rpcCliente("fn_kpi_ticket_medio_cliente", client_id, period),
+
+            // Saúde Operacional (novo card)
+            "saude-operacional": () =>
+                loadSaudeOperacional(client_id, period),
+            // Drilldown — Saúde Operacional (linhas para modal)
+            "saude-operacional-detalhe-gargalos": () =>
+                rpcCliente("fn_gargalos_operacionais_por_sku_cliente", client_id, period),
+
+            "saude-operacional-detalhe-risco": () =>
+                rpcCliente("fn_risco_operacional_por_sku_cliente", client_id, period),
 
             // Charts
             "chart-receita-por-semana": () =>

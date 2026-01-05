@@ -48,12 +48,14 @@
                         <!-- ESQUERDA: título + voltar -->
                         <div class="page-header-title">
                             <div class="d-flex align-items-center gap-2">
-                                <h5 class="mb-0">Cliente</h5>
+                                <h5 class="mb-0">
+                                    Cliente: <span id="cliente-nome-header">—</span>
+                                </h5>
                                 <a href="./clientes.html" class="btn btn-light-primary btn-sm">
                                     Voltar
                                 </a>
                             </div>
-                            <small class="text-muted" id="cliente-nome-placeholder">
+                            <small class="text-muted">
                                 Detalhamento
                             </small>
                         </div>
@@ -128,7 +130,7 @@
 
                 <!-- Card radial (base do produtos.html, ajustado no título) -->
                 <div class="col-xl-6 col-lg-8 col-md-12">
-                    <div class="card h-100">
+                    <div class="card">
                         <div class="card-header">
                             <div class="d-flex align-items-center justify-content-between">
                                 <h5 class="mb-0">Produtos com maior queda (semanal)</h5>
@@ -155,6 +157,67 @@
                     <div class="card kpi-elevated bg-success-subtle h-100">
                         <div class="card-body d-flex align-items-center justify-content-center py-5">
                             <h5 class="mb-0 text-muted">v.I.A.ng</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="mb-0">Saúde Operacional</h5>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Indicador 1 -->
+                                <div class="col-md-6">
+                                    <div class="card shadow-none border mb-0">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <i class="ti ti-truck-delivery f-32 text-muted"
+                                                    data-saude-icon="gargalos"></i>
+                                            </div>
+
+                                            <h6 class="mb-3">Gargalos Operacionais</h6>
+
+                                            <div class="p-3 pt-4 rounded-4 bg-success bg-opacity-50"
+                                                data-saude-box="gargalos">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-white fw-bold">Total</p>
+                                                    <p class="mb-0 text-white fw-bold fs-5" data-saude-value="gargalos">
+                                                        0
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Indicador 2 -->
+                                <div class="col-md-6">
+                                    <div class="card shadow-none border mb-0">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <i class="ph ph-warning-diamond f-32 text-muted"
+                                                    data-saude-icon="risco"></i>
+                                            </div>
+
+                                            <h6 class="mb-3">SKU's em risco</h6>
+
+                                            <div class="p-3 pt-4 rounded-4 bg-success bg-opacity-50"
+                                                data-saude-box="risco">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-white fw-bold">Total</p>
+                                                    <p class="mb-0 text-white fw-bold fs-5" data-saude-value="risco">
+                                                        0
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -382,13 +445,13 @@
             const activeBreadcrumb = document.querySelector(
                 '.breadcrumb-item.active'
             );
-            if (!activeBreadcrumb) return;
+            // breadcrumb é opcional nesta página
 
             const ENDPOINT =
                 'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/clientes';
 
             const ANON_KEY =
-                'SUA_ANON_KEY_AQUI';
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
 
             fetch(ENDPOINT, {
                 method: 'POST',
@@ -400,10 +463,27 @@
             })
                 .then(r => r.json())
                 .then(rows => {
-                    const cliente = rows.find(r => r.client_id === clientId);
+                    console.log('[resolveClienteBreadcrumb] payload:', rows);
+
+                    if (!Array.isArray(rows)) {
+                        console.error('[resolveClienteBreadcrumb] payload não é array');
+                        return;
+                    }
+
+                    const cliente = rows.find(
+                        r => String(r.client_id) === String(clientId)
+                    );
+
                     if (!cliente) return;
 
-                    activeBreadcrumb.textContent = cliente.display_name;
+                    if (activeBreadcrumb) {
+                        activeBreadcrumb.textContent = cliente.display_name;
+                    }
+
+                    const headerEl = document.getElementById('cliente-nome-header');
+                    if (headerEl) {
+                        headerEl.textContent = cliente.display_name;
+                    }
                 });
 
         })();
@@ -628,6 +708,259 @@
                     console.error('[KPI Ticket Médio]', e);
                 }
             }
+
+            /* =====================================================
+ *  SAÚDE OPERACIONAL — SCRIPT (FRONT ONLY)
+ *  Página: cliente-detalhe.html
+ *
+ *  CONTRATO DE DADOS (AGREGADO):
+ *  Espera um payload no formato:
+ *  {
+ *    gargalos_operacionais: number,   // count distinto de SKUs com late_order = 1
+ *    skus_em_risco: number           // count distinto de SKUs com pedido em risco
+ *  }
+ *
+ *  DRILLDOWN (DETALHE):
+ *  - NÃO existe menu ou ícone de 3 pontinhos
+ *  - Clique ocorre no bloco "Total"
+ *  - value === 0 → estático
+ *  - value > 0 → sublinhado + abre modal
+ * ===================================================== */
+
+            (function initSaudeOperacionalCard() {
+                console.log('[Saúde Operacional] init');
+
+                // ------------------------------------------------------------------
+                // ELEMENTOS DOM — Indicador 1
+                // ------------------------------------------------------------------
+                const elGargalosValue = document.querySelector('[data-saude-value="gargalos"]');
+                const elGargalosIcon = document.querySelector('[data-saude-icon="gargalos"]');
+
+                // ------------------------------------------------------------------
+                // ELEMENTOS DOM — Indicador 2
+                // ------------------------------------------------------------------
+                const elRiscoValue = document.querySelector('[data-saude-value="risco"]');
+                const elRiscoIcon = document.querySelector('[data-saude-icon="risco"]');
+
+                if (!elGargalosValue || !elRiscoValue) {
+                    console.warn('[Saúde Operacional] elementos DOM não encontrados');
+                    return;
+                }
+
+                // ------------------------------------------------------------------
+                // MODAL (Bootstrap/AdminDek) — lazy init + reuse
+                // ------------------------------------------------------------------
+                const SAUDE_MODAL_ID = 'modal-saude-operacional-detalhe';
+
+                function ensureSaudeModal() {
+                    let el = document.getElementById(SAUDE_MODAL_ID);
+                    if (el) return el;
+
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = `
+<div class="modal fade" id="${SAUDE_MODAL_ID}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" data-saude-modal-title>Detalhe</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle mb-0">
+                <thead>
+                <tr data-saude-modal-head></tr>
+                </thead>
+                <tbody data-saude-modal-body>
+                <tr><td class="text-muted">Carregando…</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
+        </div>
+        </div>
+    </div>
+</div>`.trim();
+
+                    el = wrapper.firstElementChild;
+                    document.body.appendChild(el);
+                    return el;
+                }
+
+                function openSaudeModal() {
+                    const modalEl = ensureSaudeModal();
+                    const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    instance.show();
+                }
+
+                function setSaudeModalTitle(title) {
+                    const modalEl = ensureSaudeModal();
+                    const titleEl = modalEl.querySelector('[data-saude-modal-title]');
+                    if (titleEl) titleEl.textContent = title;
+                }
+
+                function setSaudeModalLoading() {
+                    const modalEl = ensureSaudeModal();
+                    const headTr = modalEl.querySelector('[data-saude-modal-head]');
+                    const body = modalEl.querySelector('[data-saude-modal-body]');
+                    if (headTr) headTr.innerHTML = '';
+                    if (body) body.innerHTML = `<tr><td class="text-muted">Carregando…</td></tr>`;
+                }
+
+                function setSaudeModalEmpty() {
+                    const modalEl = ensureSaudeModal();
+                    const headTr = modalEl.querySelector('[data-saude-modal-head]');
+                    const body = modalEl.querySelector('[data-saude-modal-body]');
+                    if (headTr) headTr.innerHTML = '';
+                    if (body) body.innerHTML = `<tr><td class="text-muted">Sem resultados no período.</td></tr>`;
+                }
+
+                function escapeHtml(s) {
+                    return String(s ?? '')
+                        .replaceAll('&', '&amp;')
+                        .replaceAll('<', '&lt;')
+                        .replaceAll('>', '&gt;')
+                        .replaceAll('"', '&quot;')
+                        .replaceAll("'", '&#039;');
+                }
+
+                function renderSaudeModalTable(rows) {
+                    if (!Array.isArray(rows) || rows.length === 0) {
+                        setSaudeModalEmpty();
+                        return;
+                    }
+
+                    const modalEl = ensureSaudeModal();
+                    const headTr = modalEl.querySelector('[data-saude-modal-head]');
+                    const body = modalEl.querySelector('[data-saude-modal-body]');
+
+                    const first = rows[0] || {};
+                    const cols = Object.keys(first);
+
+                    if (headTr) {
+                        headTr.innerHTML = cols.map((c) => `<th class="text-nowrap">${escapeHtml(c)}</th>`).join('');
+                    }
+
+                    if (body) {
+                        body.innerHTML = rows.map((r) => {
+                            return `<tr>` + cols.map((c) => `<td class="text-nowrap">${escapeHtml(r?.[c])}</td>`).join('') + `</tr>`;
+                        }).join('');
+                    }
+                }
+
+                async function handleDetalheClick(kind) {
+                    console.log('[Saúde Operacional] detalhe click', { kind });
+
+                    setSaudeModalTitle(
+                        kind === 'gargalos'
+                            ? 'Detalhe — Gargalos Operacionais'
+                            : 'Detalhe — SKUs em risco'
+                    );
+                    setSaudeModalLoading();
+                    openSaudeModal();
+
+                    try {
+                        const route = kind === 'gargalos'
+                            ? 'saude-operacional-detalhe-gargalos'
+                            : 'saude-operacional-detalhe-risco';
+
+                        const rows = await postJSON(route, window.DASHBOARD_PERIOD);
+                        renderSaudeModalTable(rows);
+                    } catch (err) {
+                        console.error('[Saúde Operacional] erro no detalhe', err);
+
+                        const modalEl = ensureSaudeModal();
+                        const headTr = modalEl.querySelector('[data-saude-modal-head]');
+                        const body = modalEl.querySelector('[data-saude-modal-body]');
+                        if (headTr) headTr.innerHTML = '';
+                        if (body) body.innerHTML = `<tr><td class="text-danger">Erro ao carregar detalhe.</td></tr>`;
+                    }
+                }
+
+                // ------------------------------------------------------------------
+                // RENDER
+                // ------------------------------------------------------------------
+                function renderIndicador({
+                    value,
+                    valueEl,
+                    iconEl,
+                    kind
+                }) {
+                    valueEl.textContent = value;
+
+                    const fillEl = valueEl.parentElement;
+                    const clickableEl = valueEl.parentElement; // div.d-flex (Total + valor)
+
+                    clickableEl.style.cursor = 'default';
+                    clickableEl.style.textDecoration = 'none';
+                    clickableEl.onclick = null;
+
+                    if (value > 0) {
+                        clickableEl.style.cursor = 'pointer';
+                        clickableEl.style.textDecoration = 'underline';
+                        clickableEl.onclick = function () {
+                            handleDetalheClick(kind);
+                        };
+                    }
+
+                    fillEl.parentElement.classList.remove('bg-info', 'text-info');
+
+                    if (value > 0) {
+                        fillEl.parentElement.classList.remove('bg-success', 'bg-opacity-50');
+                        fillEl.parentElement.classList.add('bg-warning', 'bg-opacity-50');
+
+                        iconEl.classList.remove('text-muted');
+                        iconEl.classList.add('text-warning');
+                    } else {
+                        fillEl.parentElement.classList.remove('bg-warning', 'bg-opacity-50');
+                        fillEl.parentElement.classList.add('bg-success', 'bg-opacity-50');
+
+                        iconEl.classList.remove('text-warning');
+                        iconEl.classList.add('text-muted');
+                    }
+                }
+
+                // ------------------------------------------------------------------
+                // APPLY — Saúde Operacional
+                // ------------------------------------------------------------------
+                (async function loadSaudeOperacional() {
+                    console.log('[Saúde Operacional] fetch start');
+
+                    try {
+                        const payload = await postJSON(
+                            'saude-operacional',
+                            window.DASHBOARD_PERIOD
+                        );
+
+                        console.log('[Saúde Operacional] payload recebido', payload);
+
+                        const gargalos = Number(payload?.gargalos_operacionais ?? 0);
+                        const risco = Number(payload?.skus_em_risco ?? 0);
+
+                        renderIndicador({
+                            value: gargalos,
+                            valueEl: elGargalosValue,
+                            iconEl: elGargalosIcon,
+                            kind: 'gargalos'
+                        });
+
+                        renderIndicador({
+                            value: risco,
+                            valueEl: elRiscoValue,
+                            iconEl: elRiscoIcon,
+                            kind: 'risco'
+                        });
+
+                    } catch (err) {
+                        console.error('[Saúde Operacional] erro ao carregar', err);
+                    }
+                })();
+
+                console.log('[Saúde Operacional] render concluído');
+            })();
+
 
             /* =====================================================
              *  CHART — RECEITA POR SEMANA
