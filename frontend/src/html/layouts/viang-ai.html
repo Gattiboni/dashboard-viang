@@ -1,0 +1,816 @@
+<!-- =====================================================
+     v.I.A.ng — MODAL + SCRIPT (GLOBAL INCLUDE)
+     Arquivo: frontend/src/html/viang-ai.html
+     Regra: SEM JS separado. Inline apenas.
+===================================================== -->
+
+<!-- v.I.A.ng Modal -->
+<div class="modal fade" id="viangAiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="../assets/images/viang/avatar-I-A.svg" alt="v.I.A.ng"
+                        style="width:28px;height:28px;object-fit:contain;" />
+                    <div class="d-flex flex-column">
+                        <h5 class="modal-title mb-0">v.I.A.ng</h5>
+                        <small class="text-muted" id="viangAiContextLine">Inteligente</small>
+                    </div>
+                </div>
+
+                <!-- Top-right icon buttons (Light) -->
+                <div class="d-flex align-items-center gap-1">
+
+                    <!-- Action buttons (contextual) -->
+                    <div class="btn-group" role="group" aria-label="Ações v.I.A.ng">
+                        <button type="button" class="btn btn-light btn-icon" id="viangAiBtnExplain"
+                            data-bs-toggle="tooltip" data-bs-title="Explicar">
+                            <i class="ph ph-info"></i>
+                        </button>
+
+                        <button type="button" class="btn btn-light btn-icon" id="viangAiBtnAnalyze"
+                            data-bs-toggle="tooltip" data-bs-title="Analisar">
+                            <i class="ph ph-chart-line-up"></i>
+                        </button>
+
+                        <button type="button" class="btn btn-light btn-icon" id="viangAiBtnAsk" data-bs-toggle="tooltip"
+                            data-bs-title="Perguntar">
+                            <i class="ph ph-chat-teardrop-text"></i>
+                        </button>
+                    </div>
+
+                    <!-- Utility buttons -->
+                    <div class="btn-group ms-1" role="group" aria-label="Utilidades v.I.A.ng">
+                        <button type="button" class="btn btn-light btn-icon" id="viangAiBtnCopy"
+                            data-bs-toggle="tooltip" data-bs-title="Copiar última resposta" disabled>
+                            <i class="ph ph-copy"></i>
+                        </button>
+
+                        <div class="btn-group" role="group" id="viangAiExportGroup">
+                            <button type="button" class="btn btn-light btn-icon dropdown-toggle" id="viangAiBtnExport"
+                                data-bs-toggle="dropdown" aria-expanded="false" title="Exportar" disabled>
+                                <i class="ph ph-file-pdf"></i>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" type="button" id="viangAiExportThread" disabled>
+                                        Exportar conversa atual
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" id="viangAiExportFull" disabled>
+                                        Exportar página completa com análise
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button type="button" class="btn btn-light btn-icon" id="viangAiBtnClose"
+                            data-bs-toggle="tooltip" data-bs-title="Fechar">
+                            <i class="ph ph-x"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <!-- Welcome -->
+                <div class="alert alert-light mb-3" id="viangAiWelcomeBox">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="ph ph-sparkle f-18 mt-1"></i>
+                        <div>
+                            <div class="fw-semibold mb-1">Oi, eu sou a v.I.A.ng.</div>
+                            <div class="text-muted">
+                                Estou aqui pra te ajudar a entender esta ferramenta por completo, cada uma de suas
+                                páginas e cada um dos gráficos.
+                                Ainda, posso te ajudar a analisar o que cada gráfico traz de importante para você levar
+                                para seu relacionamento com seus clientes.
+                            </div>
+                            <div class="mt-2 text-muted" id="viangAiWelcomeHint">
+                                Escolha uma das ações no canto superior direito.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spinner (Border) -->
+                <div class="d-none" id="viangAiSpinnerWrap">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+                        <span class="text-muted">Carregando…</span>
+                    </div>
+                </div>
+
+                <!-- Conversation / Output -->
+                <div id="viangAiThread" class="border rounded p-3"
+                    style="min-height: 220px; max-height: 360px; overflow:auto;">
+                    <div class="text-muted">Nenhuma interação ainda.</div>
+                </div>
+
+                <!-- Ask box -->
+                <div class="mt-3 d-none" id="viangAiAskBox">
+                    <label for="viangAiAskInput" class="form-label mb-1" id="viangAiAskLabel">Faça uma pergunta</label>
+                    <div class="input-group">
+                        <textarea class="form-control" id="viangAiAskInput" rows="2"
+                            placeholder="Digite sua pergunta…"></textarea>
+                        <button class="btn btn-primary" type="button" id="viangAiAskSend">
+                            Enviar
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        Dica: depois da primeira resposta, você pode fazer follow-ups ilimitados aqui.
+                    </small>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- libs para export PDF (somente export completo) -->
+<script src="../assets/js/plugins/html2canvas.min.js"></script>
+<script src="../assets/js/plugins/jspdf.umd.min.js"></script>
+
+<script>
+    (function viangAiBootstrap() {
+        console.log('[v.I.A.ng] viang-ai.html carregou e bootstrap iniciou');
+        // =====================================================
+        // CONFIG — segue o padrão já usado nas páginas (hardcoded)
+        // =====================================================
+        const VIANG_AI_ENDPOINT = 'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/viang-ai';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+
+        // =====================================================
+        // STATE (limpo ao fechar)
+        // =====================================================
+        const state = {
+            page: null,
+            context: null,
+            elementId: null,
+            actionType: null,
+            userPrompt: null,
+            period: null,
+
+            // v.I.A.ng — contexto semântico da página (gerado automaticamente)
+            pageSemanticContext: null
+        };
+
+        // =====================================================
+        // DOM
+        // =====================================================
+        const modalEl = document.getElementById('viangAiModal');
+        const contextLine = document.getElementById('viangAiContextLine');
+
+        const welcomeBox = document.getElementById('viangAiWelcomeBox');
+        const welcomeHint = document.getElementById('viangAiWelcomeHint');
+
+        const spinnerWrap = document.getElementById('viangAiSpinnerWrap');
+        const threadEl = document.getElementById('viangAiThread');
+
+        const askBox = document.getElementById('viangAiAskBox');
+        const askLabel = document.getElementById('viangAiAskLabel');
+        const askInput = document.getElementById('viangAiAskInput');
+        const askSend = document.getElementById('viangAiAskSend');
+
+        const btnExplain = document.getElementById('viangAiBtnExplain');
+        const btnAnalyze = document.getElementById('viangAiBtnAnalyze');
+        const btnAsk = document.getElementById('viangAiBtnAsk');
+
+        const btnCopy = document.getElementById('viangAiBtnCopy');
+        const btnExport = document.getElementById('viangAiBtnExport');
+        const btnClose = document.getElementById('viangAiBtnClose');
+
+        const btnExportThread = document.getElementById('viangAiExportThread');
+        const btnExportFull = document.getElementById('viangAiExportFull');
+
+        console.log('[v.I.A.ng] DOM check', {
+            modalEl: !!modalEl,
+            contextLine: !!contextLine,
+            spinnerWrap: !!spinnerWrap,
+            threadEl: !!threadEl,
+            askBox: !!askBox,
+            askInput: !!askInput,
+            askSend: !!askSend,
+            btnExplain: !!btnExplain,
+            btnAnalyze: !!btnAnalyze,
+            btnAsk: !!btnAsk,
+            btnCopy: !!btnCopy,
+            btnExport: !!btnExport,
+            btnClose: !!btnClose
+        });
+
+        // =====================================================
+        // Bootstrap modal + tooltips
+        // =====================================================
+        let bsModal = null;
+
+        function initBootstrapHelpers() {
+            console.log('[v.I.A.ng] initBootstrapHelpers() chamado. window.bootstrap existe?', !!window.bootstrap);
+
+            if (!window.bootstrap) {
+                console.warn('[v.I.A.ng] Bootstrap JS NÃO disponível. Modal não vai abrir.');
+                return;
+            }
+
+            // tooltips
+            const ttList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            ttList.forEach(el => new bootstrap.Tooltip(el));
+
+            // modal instance
+            if (!bsModal) bsModal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                console.log('[v.I.A.ng] Modal fechado (hidden.bs.modal). Resetando estado.');
+                hardReset();
+            });
+        }
+
+        // =====================================================
+        // Helpers
+        // =====================================================
+        function showSpinner(show) {
+            spinnerWrap.classList.toggle('d-none', !show);
+        }
+
+        function setAskVisible(show) {
+            askBox.classList.toggle('d-none', !show);
+            if (show) setTimeout(() => askInput.focus(), 0);
+        }
+
+        function setUtilitiesEnabled(enabled) {
+            const off = !enabled;
+
+            btnCopy.disabled = off;
+
+            // botão dropdown
+            btnExport.disabled = off;
+
+            // itens do dropdown
+            if (btnExportThread) btnExportThread.disabled = off;
+            if (btnExportFull) btnExportFull.disabled = off;
+        }
+
+        function renderThread() {
+            if (!state.history.length) {
+                threadEl.innerHTML = '<div class="text-muted">Nenhuma interação ainda.</div>';
+                setUtilitiesEnabled(false);
+                return;
+            }
+
+            const html = state.history.map(item => {
+                const isUser = item.role === 'user';
+                const badge = isUser
+                    ? '<span class="badge bg-primary-subtle text-primary">Você</span>'
+                    : '<span class="badge bg-success-subtle text-success">v.I.A.ng</span>';
+
+                return `
+          <div class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              ${badge}
+              <small class="text-muted">${isUser ? 'Pergunta' : 'Resposta'}</small>
+            </div>
+            <div class="white-space-pre-wrap">${escapeHtml(item.text)}</div>
+          </div>
+        `;
+            }).join('');
+
+            threadEl.innerHTML = html;
+            threadEl.scrollTop = threadEl.scrollHeight;
+
+            setUtilitiesEnabled(Boolean(state.lastResponse));
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;')
+                .replaceAll('\n', '<br>');
+        }
+
+        function getClientIdFromUrl() {
+            // padrão real do projeto: cliente-detalhe usa querystring client_id
+            const params = new URLSearchParams(window.location.search);
+            return params.get('client_id') || '00000000-0000-0000-0000-000000000001';
+        }
+
+        function getPeriodFromPage() {
+            // MVP: tenta ler o texto "Período: X dias" e assume últimos X dias.
+            // Não é inferência “mística”; é fallback. Se não achar, usa 30d.
+            const periodEl = document.querySelector('[data-period-label], #global-period-label, .period-label');
+            const raw = periodEl ? periodEl.textContent : '';
+            const match = raw && raw.match(/(\d+)\s*dias/i);
+            const days = match ? parseInt(match[1], 10) : 30;
+
+            const end = new Date();
+            const start = new Date(end.getTime() - (days * 24 * 60 * 60 * 1000));
+
+            const fmt = (d) => d.toISOString().slice(0, 10);
+            return { start: fmt(start), end: fmt(end) };
+        }
+
+        function deriveContextLine() {
+            if (state.context === 'page') return `Página: ${state.page}`;
+            if (state.context === 'element') return `Elemento: ${state.element_id} | Página: ${state.page}`;
+            return 'Inteligente';
+        }
+
+        function setActionTooltips() {
+            // muda rótulos conforme contexto
+            const isPage = state.context === 'page';
+
+            btnExplain.setAttribute('data-bs-title', isPage ? 'Explicar esta página' : 'Explicar este elemento');
+            btnAnalyze.setAttribute('data-bs-title', isPage ? 'Analisar esta página' : 'Analisar este elemento');
+            btnAsk.setAttribute('data-bs-title', isPage ? 'Perguntar sobre esta página' : 'Perguntar sobre este elemento');
+
+            askLabel.textContent = isPage ? 'Faça qualquer pergunta sobre esta página' : 'Faça qualquer pergunta sobre este gráfico ou elemento';
+
+            // Recria tooltips (bootstrap não atualiza title automaticamente)
+            if (window.bootstrap) {
+                [btnExplain, btnAnalyze, btnAsk, btnCopy, btnExport, btnClose].forEach(el => {
+                    const inst = bootstrap.Tooltip.getInstance(el);
+                    if (inst) inst.dispose();
+                    new bootstrap.Tooltip(el);
+                });
+            }
+        }
+
+        function collectPageSemanticContext() {
+            const ctx = {
+                page: state.page,
+
+                // =====================================================
+                // MAPA EXPLÍCITO — página → edge responsável pela análise
+                // =====================================================
+                page_data_source: {
+                    kind: 'edge',
+                    name: 'home-dashboard'
+                },
+
+                components: []
+            };
+
+            // =====================================================
+            // MAPA EXPLÍCITO — element_id → data source
+            // =====================================================
+            const DATA_SOURCE_MAP = {
+                'kpi-receita-bruta': {
+                    kind: 'rpc',
+                    name: 'kpi-receita-bruta'
+                },
+                'chart-receita-semana': {
+                    kind: 'rpc',
+                    name: 'chart-receita-por-semana'
+                },
+                'chart-receita-cliente-semana': {
+                    kind: 'rpc',
+                    name: 'chart-receita-cliente-semana'
+                },
+                'chart-pedidos-dia': {
+                    kind: 'rpc',
+                    name: 'chart-pedidos-dia'
+                },
+                'chart-unidades-categoria': {
+                    kind: 'rpc',
+                    name: 'chart-unidades-categoria'
+                },
+                'chart-top-skus': {
+                    kind: 'rpc',
+                    name: 'chart-top-skus'
+                },
+                'chart-distribuicao-categoria': {
+                    kind: 'rpc',
+                    name: 'chart-distribuicao-categoria'
+                },
+                'chart-ticket-medio-categoria': {
+                    kind: 'rpc',
+                    name: 'chart-ticket-medio-categoria'
+                }
+            };
+
+            // KPIs
+            document.querySelectorAll('[id^="kpi-"]').forEach(el => {
+                ctx.components.push({
+                    id: el.id,
+                    type: 'kpi',
+                    title: el.querySelector('h1,h2,h3,h4,h5,h6')?.innerText?.trim() || null,
+                    data_source: DATA_SOURCE_MAP[el.id] || null
+                });
+            });
+
+            // Charts
+            document.querySelectorAll('[id^="chart-"]').forEach(el => {
+                ctx.components.push({
+                    id: el.id,
+                    type: 'chart',
+                    title: el.querySelector('h1,h2,h3,h4,h5,h6')?.innerText?.trim() || null,
+                    data_source: DATA_SOURCE_MAP[el.id] || null
+                });
+            });
+
+            return ctx;
+        }
+
+        function openModalWithTrigger(triggerEl) {
+            state.open = true;
+            state.context = triggerEl.dataset.context || null;
+            state.page = triggerEl.dataset.page || triggerEl.dataset.pageName || null;
+            state.element_id = triggerEl.dataset.elementId || null;
+            // v.I.A.ng — coleta automática do contexto semântico da página
+            state.pageSemanticContext = collectPageSemanticContext();
+
+            state.client_id = getClientIdFromUrl();
+            state.period = getPeriodFromPage();
+
+            contextLine.textContent = deriveContextLine();
+            setActionTooltips();
+
+            welcomeHint.textContent = 'Escolha uma das ações no canto superior direito.';
+            setAskVisible(false);
+            showSpinner(false);
+
+            state.history = [];
+            state.lastResponse = null;
+            renderThread();
+
+            if (bsModal) {
+                console.log('[v.I.A.ng] Chamando bsModal.show()');
+                bsModal.show();
+            } else {
+                console.warn('[v.I.A.ng] bsModal é null. Modal NÃO será exibido.');
+            }
+        }
+
+        function hardReset() {
+            state.open = false;
+            state.context = null;
+            state.page = null;
+            state.client_id = null;
+            state.element_id = null;
+            state.period = null;
+            state.lastResponse = null;
+            state.history = [];
+
+            contextLine.textContent = 'Inteligente';
+            setAskVisible(false);
+            showSpinner(false);
+            renderThread();
+            if (askInput) askInput.value = '';
+        }
+
+        async function callEdge(actionType, userPrompt) {
+            // validações mínimas (contrato)
+            if (!state.client_id || !state.page || !state.context || !state.period) {
+                throw new Error('Contexto incompleto. (client_id/page/context/period)');
+            }
+            if (state.context === 'element' && !state.element_id) {
+                throw new Error('element_id obrigatório quando context=element.');
+            }
+            if (actionType === 'ask' && !userPrompt) {
+                throw new Error('user_prompt obrigatório para ask.');
+            }
+
+            const payload = {
+                client_id: state.client_id,
+                page: state.page,
+                context: state.context,
+                element_id: state.element_id,
+                action_type: actionType,
+                user_prompt: userPrompt, // ✅ FONTE CORRETA
+                period: state.period,
+                page_semantic_context: state.pageSemanticContext
+            };
+
+            console.log('[v.I.A.ng] callEdge() payload', payload);
+            console.log('[v.I.A.ng] callEdge() endpoint', VIANG_AI_ENDPOINT);
+            const res = await fetch(VIANG_AI_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || `Erro HTTP ${res.status}`);
+            }
+
+            const json = await res.json();
+            return json && json.response ? json.response : 'Sem resposta.';
+        }
+
+        async function runAction(actionType, userPrompt) {
+            showSpinner(true);
+            setAskVisible(actionType === 'ask');
+
+            // registra pergunta no histórico (quando houver)
+            if (actionType === 'ask') {
+                state.history.push({ role: 'user', text: userPrompt });
+                renderThread();
+            } else {
+                // Explicar / Analisar: a "pergunta" é implícita, mas registra de forma legível
+                const label =
+                    (actionType === 'explain')
+                        ? (state.context === 'page' ? 'Explicar esta página' : 'Explicar este gráfico ou elemento')
+                        : (state.context === 'page' ? 'Analisar esta página' : 'Analisar este gráfico ou elemento');
+
+                state.history.push({ role: 'user', text: label });
+                renderThread();
+            }
+
+            try {
+                const answer = await callEdge(actionType, userPrompt);
+                state.lastResponse = answer;
+                state.history.push({ role: 'assistant', text: answer });
+                renderThread();
+            } finally {
+                showSpinner(false);
+            }
+        }
+
+        function doCopyLast() {
+            if (!state.lastResponse) return;
+            navigator.clipboard.writeText(state.lastResponse);
+        }
+
+        function doExportPrint() {
+            if (!state.lastResponse && !state.history.length) return;
+
+            const title = 'v.I.A.ng — Export';
+            const breadcrumb = state.context === 'page'
+                ? `Página: ${state.page}`
+                : `Página: ${state.page} | Elemento: ${state.element_id}`;
+
+            const period = state.period ? `${state.period.start} a ${state.period.end}` : '';
+
+            const threadHtml = state.history.map(item => {
+                const who = item.role === 'user' ? 'Você' : 'v.I.A.ng';
+                return `
+          <div style="margin-bottom:14px;">
+            <div style="font-weight:700;margin-bottom:6px;">${who}</div>
+            <div style="white-space:pre-wrap;">${item.text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</div>
+          </div>
+        `;
+            }).join('');
+
+            const w = window.open('', '_blank');
+            if (!w) return;
+
+            w.document.write(`
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>${title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              h1 { font-size: 18px; margin: 0 0 8px; }
+              .meta { color: #444; margin-bottom: 18px; font-size: 12px; }
+              .box { border: 1px solid #ddd; padding: 14px; border-radius: 8px; }
+            </style>
+          </head>
+          <body>
+            <h1>${title}</h1>
+            <div class="meta">
+              <div><strong>Breadcrumb:</strong> ${breadcrumb}</div>
+              <div><strong>Período:</strong> ${period}</div>
+            </div>
+            <div class="box">
+              ${threadHtml}
+            </div>
+            <script>window.onload = () => window.print();<\/script>
+</body>
+
+</html>
+`);
+            w.document.close();
+        }
+
+        async function doExportPageWithAnalysis() {
+            if (!state.open) return;
+            if (!state.page || !state.period) return;
+
+            showSpinner(true);
+
+            try {
+                // ============================
+                // 1) Texto da análise (cache-first)
+                // ============================
+                const analysisText = await callEdge('analyze', null);
+
+                // ============================
+                // 2) Captura visual da página
+                // ============================
+                const pageRoot =
+                    document.querySelector('.pc-content') ||
+                    document.querySelector('.pc-container') ||
+                    document.querySelector('.pcoded-content');
+
+                if (!pageRoot) return;
+
+                const canvas = await html2canvas(pageRoot, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    ignoreElements: (el) =>
+                        el.id === 'viangAiModal' ||
+                        el.classList?.contains('modal') ||
+                        el.classList?.contains('modal-backdrop')
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+
+                // ============================
+                // 3) PDF controlado (sem Admindek)
+                // ============================
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+
+                // ============================
+                // 4) Página(s) com imagem
+                // ============================
+                const imgProps = pdf.getImageProperties(imgData);
+                const imgWidth = pageWidth;
+                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                let y = 0;
+                let remainingHeight = imgHeight;
+
+                while (remainingHeight > 0) {
+                    pdf.addImage(imgData, 'PNG', 0, y, imgWidth, imgHeight);
+                    remainingHeight -= pageHeight;
+
+                    if (remainingHeight > 0) {
+                        pdf.addPage();
+                        y = y - pageHeight;
+                    }
+                }
+
+                // ============================
+                // 5) Última página: análise isolada
+                // ============================
+                pdf.addPage();
+
+                const title = 'Análise da Página';
+                const breadcrumb =
+                    state.context === 'page'
+                        ? `Página: ${state.page}`
+                        : `Página: ${state.page} | Elemento: ${state.element_id || '-'}`;
+
+                const period = `${state.period.start} a ${state.period.end}`;
+
+                pdf.setFontSize(14);
+                pdf.text(title, 14, 20);
+
+                pdf.setFontSize(10);
+                pdf.text(breadcrumb, 14, 28);
+                pdf.text(`Período: ${period}`, 14, 34);
+
+                pdf.setFontSize(11);
+
+                const marginX = 14;
+                let cursorY = 46;
+                const maxWidth = pageWidth - marginX * 2;
+
+                const lines = pdf.splitTextToSize(analysisText, maxWidth);
+
+                lines.forEach(line => {
+                    if (cursorY > pageHeight - 14) {
+                        pdf.addPage();
+                        cursorY = 20;
+                    }
+                    pdf.text(line, marginX, cursorY);
+                    cursorY += 6;
+                });
+
+                // ============================
+                // 6) Download
+                // ============================
+                const filename = `viang-export-${state.page}-${state.period.start}_a_${state.period.end}.pdf`;
+                pdf.save(filename);
+
+            } finally {
+                showSpinner(false);
+            }
+        }
+
+        function closeModal() {
+            if (bsModal) bsModal.hide();
+        }
+
+        // =====================================================
+        // Wire buttons (SAFE — DOM pode ainda não existir)
+        // =====================================================
+        function wireIfExists(el, evt, fn) {
+            if (!el) return;
+            el.addEventListener(evt, fn);
+        }
+
+        wireIfExists(btnExplain, 'click', function () {
+            if (!state.open) return;
+            setAskVisible(false);
+            runAction('explain', null);
+        });
+
+        wireIfExists(btnAnalyze, 'click', function () {
+            if (!state.open) return;
+            setAskVisible(false);
+            runAction('analyze', null);
+        });
+
+        wireIfExists(btnAsk, 'click', function () {
+            if (!state.open) return;
+            setAskVisible(true);
+            welcomeHint.textContent = 'Digite sua pergunta abaixo e envie.';
+        });
+
+        wireIfExists(askSend, 'click', function () {
+            const txt = (askInput.value || '').trim();
+            if (!txt) return;
+            askInput.value = '';
+            runAction('ask', txt);
+        });
+
+        wireIfExists(btnCopy, 'click', doCopyLast);
+
+        // dropdown items
+        wireIfExists(btnExportThread, 'click', doExportPrint);
+        wireIfExists(btnExportFull, 'click', doExportPageWithAnalysis);
+
+        wireIfExists(btnClose, 'click', closeModal);
+
+        wireIfExists(askInput, 'keydown', function (e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                askSend && askSend.click();
+            }
+        });
+
+        // =====================================================
+        // Trigger binding (delegation)
+        // =====================================================
+        document.addEventListener(
+            'click',
+            function (e) {
+                const t = e.target.closest('.viang-ai-trigger');
+                if (!t) return;
+
+                e.preventDefault();
+
+                console.log('[v.I.A.ng] CLICK trigger capturado (capture phase)', {
+                    tag: t.tagName,
+                    ctx: t.dataset.context,
+                    page: t.dataset.page,
+                    elementId: t.dataset.elementId
+                });
+
+                const ctx = t.dataset.context;
+                const page = t.dataset.page;
+
+                if (!ctx || !page) {
+                    console.error('[v.I.A.ng] Trigger sem data-context/data-page.');
+                    return;
+                }
+                if (ctx === 'element' && !t.dataset.elementId) {
+                    console.error('[v.I.A.ng] Trigger element sem data-element-id.');
+                    return;
+                }
+
+                initBootstrapHelpers();
+                openModalWithTrigger(t);
+            },
+            true // ← CAPTURE PHASE (não negociável aqui)
+        );
+
+        // init helpers na carga
+        if (window.bootstrap) {
+            initBootstrapHelpers();
+        }
+
+        // TESTE CONTROLADO — REMOVER DEPOIS
+        setTimeout(() => {
+            console.log('[TESTE] bootstrap existe?', !!window.bootstrap);
+            console.log('[TESTE] modalEl existe?', !!modalEl);
+            console.log('[TESTE] bsModal é', bsModal);
+        }, 0);
+
+    })();
+
+</script>

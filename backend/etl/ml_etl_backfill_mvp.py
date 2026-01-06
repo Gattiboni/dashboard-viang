@@ -489,11 +489,11 @@ def register_log(conn, status, details):
 
 
 def main():
-    log_info("BACKFILL Mercado Livre – INICIADO")
+    log_info("BACKFILL Mercado Livre (90 dias) – INICIADO")
 
     started_ts = datetime.now(timezone.utc)
     today = datetime.now(timezone.utc).date()
-    start_date = today - timedelta(days=29)  # janela 30 dias (inclusive)
+    start_date = today - timedelta(days=89)  # janela 90 dias (inclusive)
 
     conn = None
     try:
@@ -506,7 +506,7 @@ def main():
             register_log(conn, "warning", {"msg": msg})
             return
 
-        # 1) Limpa janela
+        # 1) Limpa janela (90 dias)
         delete_window(conn, start_date)
 
         total_pages = 0
@@ -586,7 +586,7 @@ def main():
 
         # 4) log final
         details = {
-            "msg": "Backfill 30 dias concluído",
+            "msg": "Backfill 90 dias concluído",
             "window_start": start_date.isoformat(),
             "window_end": today.isoformat(),
             "started_at": started_ts.isoformat(),
@@ -598,7 +598,7 @@ def main():
         }
 
         register_log(conn, "success", details)
-        log_info("BACKFILL ML Finalizado com sucesso.")
+        log_info("BACKFILL ML (90 dias) finalizado com sucesso.")
 
     except Exception as e:
         log_error(f"Erro crítico no backfill: {e}")

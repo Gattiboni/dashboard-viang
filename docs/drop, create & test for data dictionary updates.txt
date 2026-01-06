@@ -112,7 +112,8 @@ fn_rows AS (
 
 fn_md AS (
   SELECT
-    row_number() OVER (ORDER BY f.fn_name) + (SELECT max(ord) FROM rel_md) AS ord,
+    row_number() OVER (ORDER BY f.fn_name)
+      + (SELECT max(ord) FROM rel_md) AS ord,
     E'\n\n## ' || f.fn_name || E'\n' ||
     '| Coluna | Tipo | Nullable | Default |' || E'\n' ||
     '| ------ | ---- | -------- | ------- |' || E'\n' ||
@@ -141,8 +142,11 @@ FROM all_md
 ORDER BY ord;
 
 
+
 ---
 
 
 SELECT *
 FROM dashboard.vw_data_dictionary_markdown;
+
+
