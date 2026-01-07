@@ -62,7 +62,7 @@
                                 </li>
                                 <li>
                                     <button class="dropdown-item" type="button" id="viangAiExportFull" disabled>
-                                        Exportar página completa com análise
+                                        Export completo
                                     </button>
                                 </li>
                             </ul>
@@ -93,7 +93,7 @@
                                 para seu relacionamento com seus clientes.
                             </div>
                             <div class="mt-2 text-muted" id="viangAiWelcomeHint">
-                                Escolha uma das ações no canto superior direito.
+                                Escolha uma das ações acima.
                             </div>
                         </div>
                     </div>
@@ -152,7 +152,8 @@
         const state = {
             page: null,
             context: null,
-            elementId: null,
+            element_id: null,
+            element_type: null,
             actionType: null,
             userPrompt: null,
             period: null,
@@ -423,7 +424,10 @@
             state.open = true;
             state.context = triggerEl.dataset.context || null;
             state.page = triggerEl.dataset.page || triggerEl.dataset.pageName || null;
+
             state.element_id = triggerEl.dataset.elementId || null;
+            state.element_type = triggerEl.dataset.elementType || null;
+
             // v.I.A.ng — coleta automática do contexto semântico da página
             state.pageSemanticContext = collectPageSemanticContext();
 
@@ -483,8 +487,9 @@
                 page: state.page,
                 context: state.context,
                 element_id: state.element_id,
+                element_type: state.context === 'element' ? state.element_type : null,
                 action_type: actionType,
-                user_prompt: userPrompt, // ✅ FONTE CORRETA
+                user_prompt: userPrompt,
                 period: state.period,
                 page_semantic_context: state.pageSemanticContext
             };
@@ -609,16 +614,36 @@
                 const analysisText = await callEdge('analyze', null);
 
                 // ============================
-                // 2) Captura visual da página
+                // 2) Captura visual (decisão explícita por contexto)
                 // ============================
-                const pageRoot =
-                    document.querySelector('.pc-content') ||
-                    document.querySelector('.pc-container') ||
-                    document.querySelector('.pcoded-content');
 
-                if (!pageRoot) return;
+                // Fonte única da verdade:
+                // - A vIAng NÃO decide onde está
+                // - Quem decide é o state.context
+                // - O export apenas obedece
 
-                const canvas = await html2canvas(pageRoot, {
+                let captureRoot = null;
+
+                if (state.context === 'page') {
+                    // CONTRATO ORIGINAL (inalterado):
+                    // exporta a página inteira exatamente como antes
+                    captureRoot =
+                        document.querySelector('.pc-content') ||
+                        document.querySelector('.pc-container') ||
+                        document.querySelector('.pcoded-content');
+                }
+
+                if (state.context === 'element') {
+                    // NOVO COMPORTAMENTO EXPLÍCITO:
+                    // exporta APENAS o elemento analisado
+                    // sem inferência, sem fallback
+                    captureRoot = document.getElementById(state.element_id);
+                }
+
+                // Guardrail duro: se o contrato não foi atendido, aborta
+                if (!captureRoot) return;
+
+                const canvas = await html2canvas(captureRoot, {
                     scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff',
@@ -701,9 +726,16 @@
                 });
 
                 // ============================
-                // 6) Download
+                // 6) Download (nome explícito por contexto)
                 // ============================
-                const filename = `viang-export-${state.page}-${state.period.start}_a_${state.period.end}.pdf`;
+
+                const basePeriod = `${state.period.start}_a_${state.period.end}`;
+
+                const filename =
+                    state.context === 'page'
+                        ? `viang-export-pagina-${state.page}-${basePeriod}.pdf`
+                        : `viang-export-elemento-${state.element_id}-${basePeriod}.pdf`;
+
                 pdf.save(filename);
 
             } finally {
@@ -788,9 +820,16 @@
                     console.error('[v.I.A.ng] Trigger sem data-context/data-page.');
                     return;
                 }
-                if (ctx === 'element' && !t.dataset.elementId) {
-                    console.error('[v.I.A.ng] Trigger element sem data-element-id.');
-                    return;
+
+                if (ctx === 'element') {
+                    if (!t.dataset.elementId) {
+                        console.error('[v.I.A.ng] Trigger element sem data-element-id.');
+                        return;
+                    }
+                    if (!t.dataset.elementType) {
+                        console.error('[v.I.A.ng] Trigger element sem data-element-type.');
+                        return;
+                    }
                 }
 
                 initBootstrapHelpers();
