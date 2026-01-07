@@ -1,0 +1,55 @@
+<!-- =====================================================
+     Modal — Fale com o Dev
+===================================================== -->
+<div class="modal fade" id="faleComDevModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph ph-envelope-simple f-24"></i>
+                    <h5 class="modal-title mb-0">Fale com o Dev</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label for="devMessageTitle" class="form-label">
+                        Título da mensagem
+                    </label>
+                    <input type="text" class="form-control" id="devMessageTitle" maxlength="140"
+                        placeholder="Resumo do assunto">
+                </div>
+
+                <div class="mb-3">
+                    <label for="devMessageBody" class="form-label">
+                        Mensagem
+                    </label>
+                    <textarea class="form-control" id="devMessageBody" rows="6" maxlength="3000"
+                        placeholder="Descreva o que precisa..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Anexos</label>
+                    <input type="file" class="form-control" multiple>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary">
+                    Enviar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
