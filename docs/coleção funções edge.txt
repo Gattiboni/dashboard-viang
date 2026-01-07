@@ -991,8 +991,6 @@ serve(async (req) => {
 
 ---
 
-supabase\functions\viang-ai\index.ts
-
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -1028,8 +1026,6 @@ interface ViangRequest {
 
     element_id?: string | null;
     element_type?: string | null;
-    edge_function?: string | null;
-    edge_path?: string | null;
 
     action_type: ActionType;
     user_prompt?: string | null;
@@ -1070,8 +1066,6 @@ serve(async (req) => {
             context,
             element_id = null,
             element_type = null,
-            edge_function = null,
-            edge_path = null,
             action_type,
             user_prompt = null,
             period
@@ -1086,13 +1080,27 @@ serve(async (req) => {
         }
 
         if (context === "element") {
-            if (!element_id || !element_type || !edge_function || !edge_path) {
+            // Guardrail 1 — identidade mínima do elemento
+            if (!element_id || !element_type) {
                 return new Response(
-                    "element_id, element_type, edge_function and edge_path are required when context=element",
-                    {
-                        status: 400,
-                        headers: corsHeaders
-                    }
+                    "element_id e element_type são obrigatórios quando context=element",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            // Guardrail 2 — contexto semântico da página é obrigatório
+            if (!payload.page_semantic_context) {
+                return new Response(
+                    "page_semantic_context é obrigatório para contexto element",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            // Guardrail 3 — componentes precisam existir
+            if (!Array.isArray(payload.page_semantic_context.components)) {
+                return new Response(
+                    "page_semantic_context.components ausente ou inválido",
+                    { status: 400, headers: corsHeaders }
                 );
             }
         }
@@ -1158,8 +1166,50 @@ serve(async (req) => {
         let elementData: any = null;
 
         if (context === "element") {
+            // =====================================================
+            // 1) MAPEAMENTO DETERMINÍSTICO element_id → data_source
+            // =====================================================
+            const components = payload.page_semantic_context?.components;
+
+            if (!Array.isArray(components)) {
+                return new Response(
+                    "page_semantic_context.components ausente ou inválido para contexto element",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const matches = components.filter(c => c.id === element_id);
+
+            if (matches.length === 0) {
+                return new Response(
+                    `Elemento ${element_id} não encontrado no page_semantic_context`,
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            if (matches.length > 1) {
+                return new Response(
+                    `Mapeamento ambíguo: múltiplos componentes com id ${element_id}`,
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const component = matches[0];
+
+            if (!component.data_source || !component.data_source.name) {
+                return new Response(
+                    `Data source ausente ou inválido para o elemento ${element_id}`,
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const dataSourceName = component.data_source.name;
+
+            // =====================================================
+            // 2) Consome a MESMA rota que o gráfico usa
+            // =====================================================
             const elementRes = await fetch(
-                `${SUPABASE_URL}/functions/v1/${edge_function}${edge_path}`,
+                `${SUPABASE_URL}/functions/v1/home-dashboard/${dataSourceName}`,
                 {
                     method: "POST",
                     headers: {
@@ -1167,9 +1217,10 @@ serve(async (req) => {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        client_id,
-                        element_id,
-                        period
+                        type: "custom",
+                        preset: null,
+                        start_date: payload.period.start,
+                        end_date: payload.period.end
                     })
                 }
             );

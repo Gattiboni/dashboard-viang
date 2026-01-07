@@ -433,5 +433,34 @@ A navegação tornou-se previsível, estável e reproduzível em todas as págin
 
 ---
 
+## v1.6.0 — 2026-01-07  
+### IA / Produto: Introdução da v.I.A.ng (Camada de IA Analítica Governada)
+
+### Adicionado  
+- Introdução da **v.I.A.ng**, camada de IA analítica integrada ao Dashboard Viang.
+- Capacidade de análise contextual em dois níveis:
+  - **Página** (leitura consolidada dos indicadores exibidos)
+  - **Elemento** (análise isolada de gráficos ou KPIs específicos)
+- Integração direta da IA com os **mesmos contratos de dados** utilizados pelo frontend, eliminando divergência entre visualização e interpretação.
+- Criação de um **dicionário de dados específico para uso da IA**, derivado do dicionário master, com redução significativa de volume sem perda conceitual.
+- Implementação de **governança explícita de contexto**, impedindo cruzamentos implícitos entre páginas ou domínios.
+
+### Alterado  
+- Nenhuma métrica, query, contrato de dados ou estrutura de frontend foi alterada.
+- Nenhuma lógica de negócio foi movida para a IA.
+
+### Estado atual  
+- A funcionalidade da v.I.A.ng está **estável e operacional** nas páginas:
+  - **Dashboard**
+  - **Produtos**
+- Funcionalidades avançadas de expansão de contexto foram **intencionalmente postergadas**, aguardando observação do uso real da ferramenta pela equipe no dia a dia.
+
+### Impacto  
+- Ampliação significativa do valor analítico do produto sem introdução de dívida técnica.
+- Uso de IA alinhado a princípios de previsibilidade, controle e auditabilidade.
+- Arquitetura preparada para evolução futura sem necessidade de revisões estruturais.
+
+---
+
 
 *(Novas entradas devem seguir o formato dissertativo, mantendo integridade histórica e sem remoção de versões anteriores.)*

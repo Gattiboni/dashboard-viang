@@ -345,57 +345,43 @@
         }
 
         function collectPageSemanticContext() {
+            const PAGE_SOURCES = {
+                'dashboard': {
+                    edge: 'home-dashboard',
+                    map: {
+                        'kpi-receita-bruta': { kind: 'rpc', name: 'kpi-receita-bruta' },
+                        'chart-receita-semana': { kind: 'rpc', name: 'chart-receita-por-semana' },
+                        'chart-receita-cliente-semana': { kind: 'rpc', name: 'chart-receita-cliente-semana' },
+                        'chart-pedidos-dia': { kind: 'rpc', name: 'chart-pedidos-dia' },
+                        'chart-unidades-categoria': { kind: 'rpc', name: 'chart-unidades-categoria' },
+                        'chart-top-skus': { kind: 'rpc', name: 'chart-top-skus' },
+                        'chart-distribuicao-categoria': { kind: 'rpc', name: 'chart-distribuicao-categoria' },
+                        'chart-ticket-medio-categoria': { kind: 'rpc', name: 'chart-ticket-medio-categoria' }
+                    }
+                },
+                'produtos': {
+                    edge: 'produtos-dashboard',
+                    map: {
+                        'kpi-pior-queda-produto': { kind: 'rpc', name: 'alerts-pior-queda-produtos' },
+                        'chart-pior-queda-vendedores': { kind: 'rpc', name: 'alerts-pior-queda-vendedores' },
+                        'kpi-pior-margem-produto': { kind: 'rpc', name: 'alerts-pior-margem-produto' },
+                        'chart-margem-produto-scatter': { kind: 'rpc', name: 'chart-margem-produto-bubble' },
+                        'chart-giro-produtos-tempo': { kind: 'rpc', name: 'chart-giro-produtos-tempo' },
+                        'chart-curva-abc-produtos': { kind: 'rpc', name: 'table-curva-abc-produtos' },
+                        'table-tabelao-produtos': { kind: 'rpc', name: 'table-tabelao-produtos' }
+                    }
+                }
+            };
+
+            const cfg = PAGE_SOURCES[state.page] || PAGE_SOURCES['dashboard'];
+
             const ctx = {
                 page: state.page,
-
-                // =====================================================
-                // MAPA EXPLÍCITO — página → edge responsável pela análise
-                // =====================================================
-                page_data_source: {
-                    kind: 'edge',
-                    name: 'home-dashboard'
-                },
-
+                page_data_source: { kind: 'edge', name: cfg.edge },
                 components: []
             };
 
-            // =====================================================
-            // MAPA EXPLÍCITO — element_id → data source
-            // =====================================================
-            const DATA_SOURCE_MAP = {
-                'kpi-receita-bruta': {
-                    kind: 'rpc',
-                    name: 'kpi-receita-bruta'
-                },
-                'chart-receita-semana': {
-                    kind: 'rpc',
-                    name: 'chart-receita-por-semana'
-                },
-                'chart-receita-cliente-semana': {
-                    kind: 'rpc',
-                    name: 'chart-receita-cliente-semana'
-                },
-                'chart-pedidos-dia': {
-                    kind: 'rpc',
-                    name: 'chart-pedidos-dia'
-                },
-                'chart-unidades-categoria': {
-                    kind: 'rpc',
-                    name: 'chart-unidades-categoria'
-                },
-                'chart-top-skus': {
-                    kind: 'rpc',
-                    name: 'chart-top-skus'
-                },
-                'chart-distribuicao-categoria': {
-                    kind: 'rpc',
-                    name: 'chart-distribuicao-categoria'
-                },
-                'chart-ticket-medio-categoria': {
-                    kind: 'rpc',
-                    name: 'chart-ticket-medio-categoria'
-                }
-            };
+            const DATA_SOURCE_MAP = cfg.map || {};
 
             // KPIs
             document.querySelectorAll('[id^="kpi-"]').forEach(el => {
@@ -415,6 +401,23 @@
                     title: el.querySelector('h1,h2,h3,h4,h5,h6')?.innerText?.trim() || null,
                     data_source: DATA_SOURCE_MAP[el.id] || null
                 });
+            });
+
+            // Tables
+            document.querySelectorAll('[id^="table-"]').forEach(el => {
+                ctx.components.push({
+                    id: el.id,
+                    type: 'table',
+                    title: el.querySelector('h1,h2,h3,h4,h5,h6,caption')?.innerText?.trim() || null,
+                    data_source: DATA_SOURCE_MAP[el.id] || null
+                });
+            });
+
+            // Garantir que elementos conhecidos (mapeados) entrem mesmo que não tenham um id presente no DOM
+            Object.keys(DATA_SOURCE_MAP).forEach(id => {
+                if (!ctx.components.find(c => c.id === id)) {
+                    ctx.components.push({ id, type: 'unknown', title: null, data_source: DATA_SOURCE_MAP[id] });
+                }
             });
 
             return ctx;

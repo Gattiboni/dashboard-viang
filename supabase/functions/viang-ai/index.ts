@@ -212,11 +212,18 @@ serve(async (req) => {
 
             const dataSourceName = component.data_source.name;
 
+            // Resolve função base conforme a página/semântica
+            const fnBase = (
+                payload.page_semantic_context?.page_data_source?.name
+                || (page ? `${page}-dashboard` : null)
+                || 'home-dashboard'
+            );
+
             // =====================================================
             // 2) Consome a MESMA rota que o gráfico usa
             // =====================================================
             const elementRes = await fetch(
-                `${SUPABASE_URL}/functions/v1/home-dashboard/${dataSourceName}`,
+                `${SUPABASE_URL}/functions/v1/${fnBase}/${dataSourceName}`,
                 {
                     method: "POST",
                     headers: {
@@ -277,8 +284,15 @@ serve(async (req) => {
                     continue;
                 }
 
+                // Resolve função base conforme a página/semântica
+                const fnBase = (
+                    payload.page_semantic_context?.page_data_source?.name
+                    || (page ? `${page}-dashboard` : null)
+                    || 'home-dashboard'
+                );
+
                 const res = await fetch(
-                    `${SUPABASE_URL}/functions/v1/home-dashboard/${c.data_source.name}`,
+                    `${SUPABASE_URL}/functions/v1/${fnBase}/${c.data_source.name}`,
                     {
                         method: "POST",
                         headers: {
@@ -346,13 +360,13 @@ serve(async (req) => {
 
         // ===== 4) Monta prompt base (simples e controlado) =====
 
-        // 4.1 — Carrega dicionário oficial (fonte única da verdade)
+        // 4.1 — Carrega dicionário para IA (runtime controlado)
         const { data: dictionaryRows, error: dictError } = await supabase
-            .from("vw_data_dictionary_markdown")
+            .from("vw_data_dictionary_ai_runtime")
             .select("*");
 
         if (dictError) {
-            console.error("[viang-ai] erro ao carregar dicionário", dictError);
+            console.error("[viang-ai] erro ao carregar dicionário IA runtime", dictError);
         }
 
         const dataDictionary =
@@ -447,6 +461,31 @@ Dados do elemento:
 ${JSON.stringify(elementData, null, 2)}`;
         }
 
+        // ===== 4.3 — Guardrail de expansão de contexto (modelo C) =====
+        if (action_type === "ask") {
+            const prompt = user_prompt || "";
+
+            const requiresExpansion =
+                /cruz(a|e|ar)|compar(a|e|ar)|outra página|outro dashboard|fora desta página|home|financeiro|geral/i
+                    .test(prompt);
+
+            if (requiresExpansion && !(payload as any).context_expanded) {
+                return new Response(
+                    JSON.stringify({
+                        source: "system",
+                        response:
+                            "Para responder a essa pergunta, preciso expandir o contexto de análise para incluir dados de outras páginas ou domínios. Deseja prosseguir?"
+                    }),
+                    {
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+        }
+
         // ===== 5) Chamada OpenAI =====
         const openaiRes = await fetch("https://api.openai.com/v1/responses", {
             method: "POST",
@@ -477,7 +516,46 @@ ${JSON.stringify(elementData, null, 2)}`;
             openaiJson.output?.[0]?.content?.[0]?.text ??
             "Sem resposta";
 
-        // ===== 6) Salva no cache =====
+        // ===== 6) Observabilidade — uso da v.I.A.ng =====
+        try {
+            const requiresExpansion =
+                action_type === "ask" &&
+                /cruz(a|e|ar)|compar(a|e|ar)|outra página|outro dashboard|fora desta página|home|financeiro|geral/i
+                    .test(user_prompt || "");
+
+            const sessionId =
+                req.headers.get("x-viang-session-id") ||
+                crypto.randomUUID();
+
+            await supabase
+                .from("viang_ai_usage_log")
+                .insert({
+                    user_id: req.headers.get("x-user-id") || null,
+                    client_id,
+                    session_id: sessionId,
+
+                    page,
+                    context,
+                    element_id,
+                    element_type,
+
+                    action_type,
+                    user_prompt,
+
+                    requires_context_expansion: requiresExpansion,
+                    context_expanded: false,
+
+                    is_follow_up: false,
+                    interaction_index: 1,
+
+                    response_source: "openai",
+                    response_length: aiResponse.length
+                });
+        } catch (logErr) {
+            console.error("[viang-ai] falha ao registrar uso da v.I.A.ng", logErr);
+        }
+
+        // ===== 7) Salva no cache =====
         await supabase.from("insight_cache").insert({
             client_id,
             page,

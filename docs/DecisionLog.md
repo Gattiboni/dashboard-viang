@@ -692,5 +692,43 @@ Considerar o MVP como **estruturalmente completo**, com as seguintes diretrizes 
 
 ---
 
+### Decisão 024 — 2026-01-07  
+#### Introdução da v.I.A.ng como Camada de IA Analítica do Dashboard Viang
+
+**Contexto**  
+Com a consolidação estrutural do MVP, tornou-se viável introduzir uma camada de IA analítica integrada ao produto, com o objetivo de ampliar a capacidade de leitura, interpretação e tomada de decisão a partir dos dashboards existentes, sem alterar contratos de dados, métricas ou arquitetura base.
+
+Durante a implementação inicial, foram identificados riscos técnicos relevantes relacionados a:
+- Explosão de tokens por volume excessivo de contexto
+- Inferência não controlada fora do escopo da página
+- Cruzamentos implícitos entre páginas sem autorização explícita
+- Acoplamento indevido entre dados, semântica e interpretação
+
+Esses riscos foram tratados como problemas arquiteturais, não como ajustes pontuais.
+
+**Decisão**  
+Introduzir a **v.I.A.ng** como uma **camada de IA governada**, com as seguintes diretrizes explícitas:
+
+1. A v.I.A.ng opera **sempre a partir de dados reais**, consumindo exatamente os mesmos contratos de dados utilizados pelos gráficos e KPIs do frontend.
+2. A IA respeita rigorosamente o **escopo do contexto atual** (página ou elemento), não realizando cruzamentos implícitos entre páginas, domínios ou métricas.
+3. Qualquer tentativa de análise que exija expansão de contexto é **explicitamente interceptada**, exigindo autorização do sistema antes de prosseguir.
+4. O uso de IA foi separado em:
+   - **Arquitetura (governança do fluxo)**  
+   - **Ferramentas (expansão de dados e dicionário)**  
+   garantindo que nenhuma decisão ocorra de forma implícita ou automática.
+5. O dicionário de dados utilizado pela IA passou a ser uma **projeção controlada** do dicionário master, reduzindo volume sem perda de teor conceitual.
+
+**Estado atual**  
+- A v.I.A.ng encontra-se **estável e funcional** nas páginas **Dashboard** e **Produtos**.
+- O comportamento atual prioriza observabilidade real de uso antes de habilitar expansões mais complexas.
+- A arquitetura foi preparada para crescimento futuro sem necessidade de refatoração estrutural.
+
+**Impacto**  
+- Introdução de IA analítica sem comprometer previsibilidade, rastreabilidade ou integridade dos dados.
+- Redução significativa de risco técnico e cognitivo no uso diário da ferramenta.
+- Base sólida para evolução incremental da IA conforme padrões reais de uso da equipe.
+
+---
+
 
 *(Cada nova decisão é numerada e vinculada às versões do ChangeLog.)*
