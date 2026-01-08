@@ -1,0 +1,168 @@
+<!-- =====================================================
+     Modal — Fale com o Dev
+===================================================== -->
+<div class="modal fade" id="faleComDevModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph ph-envelope-simple f-24"></i>
+                    <h5 class="modal-title mb-0">Fale com o Dev</h5>
+                </div>
+                <button type="button" class="btn btn-light btn-icon" id="faleComDevClose" aria-label="Close">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label for="devMessageTitle" class="form-label">
+                        Título da mensagem
+                    </label>
+                    <input type="text" class="form-control" id="devMessageTitle" maxlength="140"
+                        placeholder="Resumo do assunto">
+                </div>
+
+                <div class="mb-3">
+                    <label for="devMessageBody" class="form-label">
+                        Mensagem
+                    </label>
+                    <textarea class="form-control" id="devMessageBody" rows="6" maxlength="3000"
+                        placeholder="Descreva o que precisa..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Anexos</label>
+                    <input type="file" class="form-control" multiple>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="faleComDevCancel">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary">
+                    Enviar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const TAG = '[FALECOMDEV]';
+
+        const trigger = document.getElementById('faleComDevTrigger');
+        const modalEl = document.getElementById('faleComDevModal');
+        const closeBtn = document.getElementById('faleComDevClose');
+        const cancelBtn = document.getElementById('faleComDevCancel');
+
+        let modalInstance = null;
+
+        console.log(TAG, 'script carregado');
+        console.log(TAG, 'window.bootstrap existe?', !!window.bootstrap);
+        console.log(TAG, 'trigger existe?', !!trigger);
+        console.log(TAG, 'modalEl existe?', !!modalEl);
+
+        if (!trigger || !modalEl) {
+            console.warn(TAG, 'abortando: trigger ou modalEl inexistente');
+            return;
+        }
+
+        function dumpBackdropState(when) {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            console.log(TAG, `[${when}] backdrops encontrados:`, backdrops.length);
+            backdrops.forEach((b, i) => {
+                console.log(TAG, `[${when}] backdrop[${i}] classes:`, b.className);
+            });
+        }
+
+        function initModal() {
+            console.log(TAG, 'initModal() chamado');
+
+            if (!window.bootstrap) {
+                console.error(TAG, 'Bootstrap NÃO disponível no initModal');
+                return null;
+            }
+
+            modalInstance = new bootstrap.Modal(modalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+
+            console.log(TAG, 'Modal instanciado:', modalInstance);
+            dumpBackdropState('apos initModal');
+
+            return modalInstance;
+        }
+
+        modalEl.addEventListener('show.bs.modal', function () {
+            console.log(TAG, 'EVENT show.bs.modal');
+            dumpBackdropState('show.bs.modal');
+        });
+
+        modalEl.addEventListener('shown.bs.modal', function () {
+            console.log(TAG, 'EVENT shown.bs.modal');
+            dumpBackdropState('shown.bs.modal');
+        });
+
+        modalEl.addEventListener('hide.bs.modal', function () {
+            console.log(TAG, 'EVENT hide.bs.modal');
+            dumpBackdropState('hide.bs.modal');
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            console.log(TAG, 'EVENT hidden.bs.modal');
+            dumpBackdropState('hidden.bs.modal');
+
+            console.log(TAG, 'resetando modalInstance');
+            modalInstance = null;
+        });
+
+        trigger.addEventListener('click', function (e) {
+            console.log(TAG, 'CLICK trigger');
+            e.preventDefault();
+
+            console.log(TAG, 'modalInstance antes:', modalInstance);
+
+            const modal = modalInstance || initModal();
+            if (!modal) {
+                console.error(TAG, 'modal é null, abortando show()');
+                return;
+            }
+
+            console.log(TAG, 'chamando modal.show()');
+            modal.show();
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+                console.log(TAG, 'CLICK closeBtn');
+                console.log(TAG, 'modalInstance no close:', modalInstance);
+                if (modalInstance) modalInstance.hide();
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function () {
+                console.log(TAG, 'CLICK cancelBtn');
+                console.log(TAG, 'modalInstance no cancel:', modalInstance);
+                if (modalInstance) modalInstance.hide();
+            });
+        }
+
+        // Snapshot final pós-load
+        setTimeout(() => {
+            console.log(TAG, 'snapshot pós-load');
+            dumpBackdropState('pos-load');
+        }, 0);
+    })();
+</script>
