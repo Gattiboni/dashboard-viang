@@ -23,7 +23,7 @@
                     <label for="devMessageTitle" class="form-label">
                         Título da mensagem
                     </label>
-                    <input type="text" class="form-control" id="devMessageTitle" maxlength="140"
+                    <input type="text" class="form-control" id="devMessageTitle" name="title" maxlength="140"
                         placeholder="Resumo do assunto">
                 </div>
 
@@ -31,13 +31,15 @@
                     <label for="devMessageBody" class="form-label">
                         Mensagem
                     </label>
-                    <textarea class="form-control" id="devMessageBody" rows="6" maxlength="3000"
+                    <textarea class="form-control" id="devMessageBody" name="message" rows="6" maxlength="3000"
                         placeholder="Descreva o que precisa..."></textarea>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Anexos</label>
-                    <input type="file" class="form-control" multiple>
+                    <input type="file" class="form-control" id="devMessageFiles" name="files[]" multiple>
+                    <div id="devFilesHelp" class="form-text">0/5 arquivos selecionados</div>
+                    <ul id="devFilesList" class="small list-unstyled mt-1 mb-0"></ul>
                 </div>
 
             </div>
@@ -47,7 +49,7 @@
                 <button type="button" class="btn btn-light" id="faleComDevCancel">
                     Cancelar
                 </button>
-                <button type="button" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" id="faleComDevSubmit">
                     Enviar
                 </button>
             </div>
@@ -55,6 +57,127 @@
         </div>
     </div>
 </div>
+
+<!-- =====================================================
+     Toast — Fale com o Dev (AdminDek | Live Toast)
+     Placement: center center
+===================================================== -->
+<div aria-live="polite" aria-atomic="true" class="position-fixed top-50 start-50 translate-middle" style="z-index:1080">
+
+    <div class="toast-container p-3">
+
+        <!-- Sucesso -->
+        <div id="faleComDevToastSuccess" class="toast hide text-white bg-success" role="alert" aria-live="assertive"
+            aria-atomic="true" data-bs-delay="4000">
+
+            <div class="d-flex">
+                <div class="toast-body">
+                    Sucesso. Mensagem enviada!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close">
+                </button>
+            </div>
+        </div>
+
+        <!-- Erro -->
+        <div id="faleComDevToastError" class="toast hide text-white bg-warning" role="alert" aria-live="assertive"
+            aria-atomic="true" data-bs-delay="5000">
+
+            <div class="d-flex">
+                <div class="toast-body">
+                    Erro ao enviar mensagem. Tente novamente.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close">
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- ===================================================== -->
+
+<script>
+    // ===== Toast wiring for Adminkek =====
+    const toastSuccessEl = document.getElementById('toast-success');
+    const toastErrorEl = document.getElementById('toast-error');
+
+    let toastSuccessInstance = null;
+    let toastErrorInstance = null;
+
+    if (toastSuccessEl && window.bootstrap && bootstrap.Toast) {
+        toastSuccessInstance = new bootstrap.Toast(toastSuccessEl);
+    }
+    if (toastErrorEl && window.bootstrap && bootstrap.Toast) {
+        toastErrorInstance = new bootstrap.Toast(toastErrorEl);
+    }
+
+    function showSuccessToast() {
+        if (toastSuccessInstance) toastSuccessInstance.show();
+    }
+
+    function showErrorToast() {
+        if (toastErrorInstance) toastErrorInstance.show();
+    }
+</script>
+
+<!-- Public Supabase config for frontend uploads -->
+<script>
+    (function () {
+        window.SUPABASE_URL = window.SUPABASE_URL || 'https://cbnisuoocsrhdqdpmips.supabase.co';
+        window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+    })();
+</script>
+
+<!-- Minimal Supabase Storage polyfill (global client) -->
+<script>
+    (function () {
+        if (window.supabase && typeof window.supabase.storage?.from === 'function') return;
+        var BASE_URL = (window.SUPABASE_URL || (window.ENV && window.ENV.SUPABASE_URL) || '').replace(/\/$/, '');
+        var ANON = (window.SUPABASE_ANON_KEY || (window.ENV && window.ENV.SUPABASE_ANON_KEY) || '');
+        if (!BASE_URL || !ANON) return; // graceful: ensureSupabaseClient() will show toast
+
+        function encPath(p) {
+            return String(p).split('/').map(encodeURIComponent).join('/');
+        }
+
+        var storage = {
+            from: function (bucket) {
+                var b = String(bucket || '');
+                return {
+                    upload: async function (path, file, opts) {
+                        opts = opts || {};
+                        try {
+                            var url = BASE_URL + '/storage/v1/object/' + encodeURIComponent(b) + '/' + encPath(path);
+                            var headers = {
+                                'Authorization': 'Bearer ' + ANON,
+                                'apikey': ANON
+                            };
+                            if (opts.upsert) headers['x-upsert'] = 'true';
+                            if (opts.contentType || (file && file.type)) headers['Content-Type'] = opts.contentType || file.type;
+                            var res = await fetch(url, { method: 'POST', headers: headers, body: file });
+                            if (!res.ok) {
+                                var txt = await res.text().catch(function () { return ''; });
+                                return { data: null, error: { message: 'HTTP ' + res.status, details: txt } };
+                            }
+                            var json = await res.json().catch(function () { return {}; });
+                            return { data: json, error: null };
+                        } catch (e) {
+                            return { data: null, error: { message: e && e.message ? e.message : String(e) } };
+                        }
+                    },
+                    getPublicUrl: function (path) {
+                        var publicUrl = BASE_URL + '/storage/v1/object/public/' + encodeURIComponent(b) + '/' + encPath(path);
+                        return { data: { publicUrl: publicUrl }, error: null };
+                    }
+                };
+            }
+        };
+
+        window.supabase = { storage: storage };
+    })();
+</script>
 
 <script>
     (function () {
@@ -64,32 +187,35 @@
         const modalEl = document.getElementById('faleComDevModal');
         const closeBtn = document.getElementById('faleComDevClose');
         const cancelBtn = document.getElementById('faleComDevCancel');
+        const submitBtn = document.getElementById('faleComDevSubmit');
+
 
         let modalInstance = null;
 
-        console.log(TAG, 'script carregado');
-        console.log(TAG, 'window.bootstrap existe?', !!window.bootstrap);
-        console.log(TAG, 'trigger existe?', !!trigger);
-        console.log(TAG, 'modalEl existe?', !!modalEl);
+        const log = (level, msg, extra = {}) => {
+            console.log(JSON.stringify({
+                level,
+                msg,
+                ts: new Date().toISOString(),
+                ...extra
+            }));
+        };
+
+        // Resolve Supabase Function URL (prefers globals, falls back to known project)
+        const FUNCTION_NAME = 'falecomdev';
+        const SUPABASE_URL = (window && (window.SUPABASE_URL || (window.ENV && window.ENV.SUPABASE_URL))) || '';
+        const FUNCTION_URL = SUPABASE_URL
+            ? `${SUPABASE_URL}/functions/v1/${FUNCTION_NAME}`
+            : 'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/falecomdev';
 
         if (!trigger || !modalEl) {
             console.warn(TAG, 'abortando: trigger ou modalEl inexistente');
             return;
         }
 
-        function dumpBackdropState(when) {
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            console.log(TAG, `[${when}] backdrops encontrados:`, backdrops.length);
-            backdrops.forEach((b, i) => {
-                console.log(TAG, `[${when}] backdrop[${i}] classes:`, b.className);
-            });
-        }
-
         function initModal() {
-            console.log(TAG, 'initModal() chamado');
-
             if (!window.bootstrap) {
-                console.error(TAG, 'Bootstrap NÃO disponível no initModal');
+                console.error(TAG, 'Bootstrap não disponível');
                 return null;
             }
 
@@ -98,71 +224,252 @@
                 keyboard: true
             });
 
-            console.log(TAG, 'Modal instanciado:', modalInstance);
-            dumpBackdropState('apos initModal');
-
             return modalInstance;
         }
 
-        modalEl.addEventListener('show.bs.modal', function () {
-            console.log(TAG, 'EVENT show.bs.modal');
-            dumpBackdropState('show.bs.modal');
-        });
-
-        modalEl.addEventListener('shown.bs.modal', function () {
-            console.log(TAG, 'EVENT shown.bs.modal');
-            dumpBackdropState('shown.bs.modal');
-        });
-
-        modalEl.addEventListener('hide.bs.modal', function () {
-            console.log(TAG, 'EVENT hide.bs.modal');
-            dumpBackdropState('hide.bs.modal');
-        });
-
-        modalEl.addEventListener('hidden.bs.modal', function () {
-            console.log(TAG, 'EVENT hidden.bs.modal');
-            dumpBackdropState('hidden.bs.modal');
-
-            console.log(TAG, 'resetando modalInstance');
-            modalInstance = null;
-        });
-
         trigger.addEventListener('click', function (e) {
-            console.log(TAG, 'CLICK trigger');
             e.preventDefault();
-
-            console.log(TAG, 'modalInstance antes:', modalInstance);
-
             const modal = modalInstance || initModal();
-            if (!modal) {
-                console.error(TAG, 'modal é null, abortando show()');
-                return;
-            }
-
-            console.log(TAG, 'chamando modal.show()');
+            if (!modal) return;
             modal.show();
         });
 
         if (closeBtn) {
             closeBtn.addEventListener('click', function () {
-                console.log(TAG, 'CLICK closeBtn');
-                console.log(TAG, 'modalInstance no close:', modalInstance);
                 if (modalInstance) modalInstance.hide();
             });
         }
 
         if (cancelBtn) {
             cancelBtn.addEventListener('click', function () {
-                console.log(TAG, 'CLICK cancelBtn');
-                console.log(TAG, 'modalInstance no cancel:', modalInstance);
                 if (modalInstance) modalInstance.hide();
             });
         }
 
-        // Snapshot final pós-load
-        setTimeout(() => {
-            console.log(TAG, 'snapshot pós-load');
-            dumpBackdropState('pos-load');
-        }, 0);
+        function sanitizeFilename(filename) {
+            const parts = filename.split('.');
+            const ext = parts.length > 1 ? '.' + parts.pop() : '';
+            const name = parts.join('.');
+
+            const safeName = name
+                .normalize('NFD')                 // separa acentos
+                .replace(/[\u0300-\u036f]/g, '')  // remove diacríticos
+                .replace(/[^0-9a-zA-Z!-_.*'()]/g, '_');
+
+            return safeName + ext;
+        }
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async function () {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'Enviando...';
+
+                const titleInput = document.querySelector('[name="title"]');
+                const messageInput = document.querySelector('[name="message"]');
+                const filesInput = document.querySelector('[name="files[]"]');
+
+                const title = titleInput ? titleInput.value.trim() : '';
+                const message = messageInput ? messageInput.value.trim() : '';
+
+                // Accumulate files across multiple selections, max 5
+                const maxFiles = 5;
+                const filesHelp = document.getElementById('devFilesHelp');
+                window.__faleComDevSelectedFiles = window.__faleComDevSelectedFiles || [];
+
+                // On every submit, also consider current picker selection
+                const currentPick = filesInput ? Array.from(filesInput.files || []) : [];
+                const makeKey = (f) => `${f.name}:${f.size}:${f.lastModified}`;
+                const existingKeys = new Set(window.__faleComDevSelectedFiles.map(makeKey));
+
+                for (const f of currentPick) {
+                    if (window.__faleComDevSelectedFiles.length >= maxFiles) break;
+                    const k = makeKey(f);
+                    if (!existingKeys.has(k)) {
+                        window.__faleComDevSelectedFiles.push(f);
+                        existingKeys.add(k);
+                    }
+                }
+
+                // Clear the native input so user can pick again without overwriting
+                if (filesInput) filesInput.value = '';
+
+                if (window.__faleComDevSelectedFiles.length === 0) {
+                    console.warn('Nenhum arquivo selecionado');
+                }
+
+                if (filesHelp) {
+                    filesHelp.textContent = `${window.__faleComDevSelectedFiles.length}/${maxFiles} arquivos selecionados`;
+                }
+
+                try {
+                    const supabase = await ensureSupabaseClient();
+                    if (!supabase) {
+                        // Config ausente: feedback já mostrado em ensureSupabaseClient
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = 'Enviar';
+                        return;
+                    }
+
+                    const uploadedUrls = [];
+                    for (const file of window.__faleComDevSelectedFiles) {
+                        const safeName = sanitizeFilename(file.name);
+                        const filePath = `${Date.now()}_${safeName}`;
+
+                        const { error } = await supabase.storage
+                            .from('falecomdev')
+                            .upload(filePath, file, {
+                                upsert: false,
+                                contentType: file.type,
+                            });
+
+                        if (error) {
+                            console.error('Storage upload error:', error);
+                            throw new Error('Erro no upload do arquivo');
+                        }
+
+                        const { data } = supabase.storage
+                            .from('falecomdev')
+                            .getPublicUrl(filePath);
+
+                        uploadedUrls.push(data.publicUrl);
+                    }
+
+                    // ===== Toast wiring for Adminkek =====
+                    const toastSuccessEl = document.getElementById('toast-success');
+                    const toastErrorEl = document.getElementById('toast-error');
+
+                    let toastSuccessInstance = null;
+                    let toastErrorInstance = null;
+
+                    if (toastSuccessEl && window.bootstrap && bootstrap.Toast) {
+                        toastSuccessInstance = new bootstrap.Toast(toastSuccessEl);
+                    }
+                    if (toastErrorEl && window.bootstrap && bootstrap.Toast) {
+                        toastErrorInstance = new bootstrap.Toast(toastErrorEl);
+                    }
+
+                    function showSuccessToast() {
+                        if (toastSuccessInstance) toastSuccessInstance.show();
+                    }
+
+                    function showErrorToast() {
+                        if (toastErrorInstance) toastErrorInstance.show();
+                    }
+
+                    const resp = await fetch(FUNCTION_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title,
+                            message,
+                            files: uploadedUrls,
+                            timestamp: new Date().toISOString(),
+                        }),
+                    });
+
+                    const json = await resp.json().catch(() => null);
+                    if (!resp.ok || !json?.ok) {
+                        console.error('Falha ao enviar mensagem', resp.status, json);
+                        throw new Error('Falha ao enviar mensagem');
+                    }
+
+                    new bootstrap.Toast(
+                        document.getElementById('faleComDevToastSuccess')
+                    ).show();
+                    // Also fire optional global toast if present
+                    try { if (typeof showSuccessToast === 'function') showSuccessToast(); } catch (_) { }
+
+                    if (titleInput) titleInput.value = '';
+                    if (messageInput) messageInput.value = '';
+                    if (filesInput) filesInput.value = '';
+                    window.__faleComDevSelectedFiles = [];
+                    renderFilesUI();
+
+                } catch (err) {
+                    console.error(err);
+                    new bootstrap.Toast(
+                        document.getElementById('faleComDevToastError')
+                    ).show();
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Enviar';
+                }
+            });
+        }
+
+        // Change handler to accumulate files across picks with limit
+        (function setupFilesAccumulator() {
+            const filesInput = document.querySelector('[name="files[]"]');
+            const maxFiles = 5;
+            if (!filesInput) return;
+
+            window.__faleComDevSelectedFiles = window.__faleComDevSelectedFiles || [];
+            const makeKey = (f) => `${f.name}:${f.size}:${f.lastModified}`;
+
+            filesInput.addEventListener('change', () => {
+                const picked = Array.from(filesInput.files || []);
+                const existingKeys = new Set(window.__faleComDevSelectedFiles.map(makeKey));
+
+                for (const f of picked) {
+                    if (window.__faleComDevSelectedFiles.length >= maxFiles) break;
+                    const k = makeKey(f);
+                    if (!existingKeys.has(k)) {
+                        window.__faleComDevSelectedFiles.push(f);
+                        existingKeys.add(k);
+                    }
+                }
+
+                // Reset native input to avoid overwrite behavior on next pick
+                filesInput.value = '';
+                renderFilesUI();
+
+                if (window.__faleComDevSelectedFiles.length >= maxFiles) {
+                    console.warn('Limite de 5 arquivos atingido');
+                }
+            });
+        })();
+
+        // Render helper counter and simple list of selected files
+        function renderFilesUI() {
+            const filesHelp = document.getElementById('devFilesHelp');
+            const list = document.getElementById('devFilesList');
+            const maxFiles = 5;
+            const files = window.__faleComDevSelectedFiles || [];
+            if (filesHelp) filesHelp.textContent = `${files.length}/${maxFiles} arquivos selecionados`;
+            if (list) {
+                list.innerHTML = '';
+                files.forEach((f, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'd-flex align-items-center gap-2';
+                    const sizeKB = Math.max(1, Math.round(f.size / 1024));
+                    const label = document.createElement('span');
+                    label.textContent = `• ${f.name} (${sizeKB} KB)`;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-link btn-sm text-danger p-0';
+                    btn.textContent = 'Remover';
+                    btn.addEventListener('click', () => {
+                        window.__faleComDevSelectedFiles.splice(idx, 1);
+                        renderFilesUI();
+                    });
+                    li.appendChild(label);
+                    li.appendChild(btn);
+                    list.appendChild(li);
+                });
+            }
+        }
+
+        // Ensure Supabase client is available from global (no dynamic imports to respect CSP)
+        async function ensureSupabaseClient() {
+            if (window.supabase && typeof window.supabase.storage?.from === 'function') {
+                return window.supabase;
+            }
+            // Missing global client; show user-friendly feedback and exit gracefully
+            console.warn('Supabase client indisponível no escopo global.');
+            const errorToastEl = document.getElementById('faleComDevToastError');
+            if (errorToastEl && window.bootstrap) new bootstrap.Toast(errorToastEl).show();
+            return null;
+        }
+
     })();
 </script>
