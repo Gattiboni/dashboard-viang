@@ -489,7 +489,7 @@ def register_log(conn, status, details):
 
 
 def main():
-    log_info("BACKFILL Mercado Livre (90 dias) – INICIADO")
+    log_info("BACKFILL ONBOARDING Mercado Livre (90 dias) – INICIADO")
 
     started_ts = datetime.now(timezone.utc)
     today = datetime.now(timezone.utc).date()
@@ -499,111 +499,155 @@ def main():
     try:
         conn = get_pg_conn()
 
-        tokens = get_active_ml_tokens(conn)
-        if not tokens:
-            msg = "Nenhum token ML ativo."
-            log_warn(msg)
-            register_log(conn, "warning", {"msg": msg})
+        # ----------------------------------------------------
+        # 0. Buscar 1 onboarding pendente
+        # ----------------------------------------------------
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                select id, details
+                from dashboard.updates_log
+                where job_name = 'ml_etl_backfill_onboarding'
+                  and status = 'pending'
+                order by created_at
+                limit 1
+                """
+            )
+            job = cur.fetchone()
+
+        if not job:
+            log_info("Nenhum backfill onboarding pendente.")
             return
 
-        # 1) Limpa janela (90 dias)
-        delete_window(conn, start_date)
+        job_id = job[0]
+        client_id = job[1].get("client_id")
+
+        log_info(f"Backfill onboarding iniciado para client_id={client_id}")
+
+        # ----------------------------------------------------
+        # 1. Buscar token ativo do cliente
+        # ----------------------------------------------------
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                select
+                    client_id,
+                    access_token,
+                    refresh_token,
+                    user_id,
+                    expires_at
+                from dashboard.api_tokens
+                where platform = 'mercado_livre'
+                  and status = 'active'
+                  and client_id = %s
+                limit 1
+                """,
+                (client_id,),
+            )
+            row = cur.fetchone()
+
+        if not row:
+            raise RuntimeError("Token ML ativo não encontrado para o client_id")
+
+        access = row[1]
+        refresh = row[2]
+        user_id = row[3]
+
+        # ----------------------------------------------------
+        # 2. Atualiza perfil ML (igual ETL diário)
+        # ----------------------------------------------------
+        try:
+            update_ml_user_info(conn, client_id, user_id, access)
+        except Exception as e:
+            log_warn(f"Falha ao atualizar perfil ML → {e}")
 
         total_pages = 0
         total_orders = 0
-        clientes_processados = 0
-        clientes_pulados = []
 
-        # 2) Coleta por cliente e por dia
-        for tok in tokens:
-            client_id = tok["client_id"]
-            access = tok["access_token"]
-            refresh = tok["refresh_token"]
-            user_id = tok["user_id"]
-
-            log_info(f"--- CLIENTE {client_id} (seller {user_id}) ---")
-
-            # Atualiza perfil ML (igual ETL)
+        # ----------------------------------------------------
+        # 3. Coleta orders por dia (90 dias)
+        # ----------------------------------------------------
+        day = start_date
+        while day <= today:
             try:
-                update_ml_user_info(conn, client_id, user_id, access)
-            except Exception as e:
-                log_warn(f"Falha ao atualizar perfil ML → {e}")
+                pages = fetch_orders_for_day(user_id, access, day)
 
-            ok = True
+                for p in pages:
+                    results = p.get("results", []) or []
+                    total_orders += len(results)
+                    total_pages += 1
+                    log_raw_event(conn, client_id, "mercado_livre", "orders", p)
 
-            day = start_date
-            while day <= today:
-                try:
-                    pages = fetch_orders_for_day(user_id, access, day)
-                    for p in pages:
-                        results = p.get("results", []) or []
-                        total_orders += len(results)
-                        total_pages += 1
-                        log_raw_event(conn, client_id, "mercado_livre", "orders", p)
+                log_info(
+                    f"{day.isoformat()} → páginas={len(pages)} | pedidos={sum(len(p.get('results', []) or []) for p in pages)}"
+                )
 
-                    log_info(
-                        f"{day.isoformat()} → páginas={len(pages)} | pedidos={sum(len(p.get('results', []) or []) for p in pages)}"
-                    )
-
-                except requests.HTTPError as e:
-                    # tenta refresh apenas nos 401
-                    if e.response is not None and e.response.status_code == 401:
-                        log_warn(
-                            f"401 em backfill (day={day.isoformat()}) para client_id={client_id} → tentando refresh"
-                        )
-                        new_access = refresh_ml_token(conn, client_id, refresh)
-                        if not new_access:
-                            ok = False
-                            break
-                        access = new_access
-                        continue
-
+            except requests.HTTPError as e:
+                if e.response is not None and e.response.status_code == 401:
                     log_warn(
-                        f"Erro HTTP no backfill (day={day.isoformat()}) client_id={client_id}: {getattr(e.response, 'text', str(e))}"
+                        f"401 no onboarding (day={day.isoformat()}) → tentando refresh"
                     )
-                    ok = False
-                    break
+                    new_access = refresh_ml_token(conn, client_id, refresh)
+                    if not new_access:
+                        raise RuntimeError("Refresh token ML falhou")
+                    access = new_access
+                    continue
 
-                except Exception as e:
-                    log_warn(
-                        f"Erro inesperado no backfill (day={day.isoformat()}): {e}"
-                    )
-                    ok = False
-                    break
+                raise
 
-                day = day + timedelta(days=1)
+            day = day + timedelta(days=1)
 
-            if not ok:
-                log_warn(f"Cliente {client_id} pulado (falha no backfill)")
-                clientes_pulados.append(str(client_id))
-                continue
-
-            clientes_processados += 1
-
-        # 3) raw → fact (só desta execução) e agregação
+        # ----------------------------------------------------
+        # 4. raw → fact → agg (somente execução atual)
+        # ----------------------------------------------------
         fact_rows = process_raw_events_to_fact(conn, started_ts)
         aggregate_daily(conn, start_date)
 
-        # 4) log final
+        # ----------------------------------------------------
+        # 5. Marca sucesso no updates_log
+        # ----------------------------------------------------
         details = {
-            "msg": "Backfill 90 dias concluído",
+            "msg": "Backfill onboarding 90 dias concluído",
+            "client_id": client_id,
             "window_start": start_date.isoformat(),
             "window_end": today.isoformat(),
             "started_at": started_ts.isoformat(),
-            "clientes_processados": clientes_processados,
-            "clientes_pulados": clientes_pulados,
             "total_pages_raw": total_pages,
             "total_pedidos": total_orders,
             "fact_rows": fact_rows,
         }
 
-        register_log(conn, "success", details)
-        log_info("BACKFILL ML (90 dias) finalizado com sucesso.")
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                update dashboard.updates_log
+                set
+                    status = 'success',
+                    finished_at = now(),
+                    notes = %s
+                where id = %s
+                """,
+                (Json(details), job_id),
+            )
+
+        log_info("BACKFILL ONBOARDING finalizado com sucesso.")
 
     except Exception as e:
-        log_error(f"Erro crítico no backfill: {e}")
+        log_error(f"Erro crítico no backfill onboarding: {e}")
         if conn:
-            register_log(conn, "error", {"msg": str(e)})
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    update dashboard.updates_log
+                    set
+                        status = 'error',
+                        finished_at = now(),
+                        notes = %s
+                    where job_name = 'ml_etl_backfill_onboarding'
+                      and status = 'pending'
+                    """,
+                    (Json({"error": str(e)}),),
+                )
     finally:
         if conn:
             conn.close()

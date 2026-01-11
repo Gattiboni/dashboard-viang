@@ -101,6 +101,28 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    // =====================================================
+    // MARCA BACKFILL ONBOARDING COMO PENDENTE (updates_log)
+    // =====================================================
+    try {
+      const { error: logError } = await supabase
+        .from("updates_log", { schema: "dashboard" })
+        .insert({
+          job_name: "ml_etl_backfill_onboarding",
+          status: "pending",
+          event: "oauth_success",
+          platform: "mercado_livre",
+          details: { client_id: state },
+          notes: { source: "ml_oauth_callback" },
+        });
+
+      if (logError) {
+        console.error("Erro ao criar updates_log (backfill pending):", logError);
+      }
+    } catch (logEx) {
+      console.error("Erro inesperado ao criar updates_log (backfill pending):", logEx);
+    }
+
     const html = `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -126,6 +148,11 @@ serve(async (req: Request): Promise<Response> => {
   </body>
 </html>
 `;
+
+    return new Response(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
 
   } catch (e) {
     console.error("Erro inesperado:", e);

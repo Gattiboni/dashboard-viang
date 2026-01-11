@@ -1,62 +1,66 @@
-name: ETL Mercado Livre — Diário
+name: ETL Mercado Livre — Backfill Onboarding
 
 on:
-  schedule:
-    # 06:00 UTC = 03:00 Brasil
-    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
-  etl-mercado-livre:
+  backfill-onboarding:
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout do repositório
-        uses: actions/checkout@v4
+        run: |
+          echo "[INFO] Iniciando checkout do repositório"
+          git clone https://github.com/${GITHUB_REPOSITORY}.git .
+          echo "[INFO] Checkout concluído"
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: 🔎 Verificar Python
+        run: |
+          echo "[INFO] Configurando ambiente Python"
+          python --version || true
+          echo "[INFO] Python configurado"
+
       - name: 📦 Instalar dependências
         run: |
-          set -e
           echo "[INFO] Atualizando pip"
           python -m pip install --upgrade pip
 
-          echo "[INFO] Instalando dependências"
+          echo "[INFO] Instalando dependências do ETL"
           pip install requests psycopg2-binary python-dotenv
 
-          echo "[INFO] Dependências instaladas"
+          echo "[INFO] Dependências instaladas com sucesso"
 
-      - name: 🚀 Rodar ETL Mercado Livre
+      - name: 🚀 Executar backfill onboarding Mercado Livre
         env:
           SUPABASE_DB_CONNECTION_STRING: ${{ secrets.SUPABASE_DB_CONNECTION_STRING }}
           SUPABASE_DB_SSL: ${{ secrets.SUPABASE_DB_SSL }}
           ML_APP_ID: ${{ secrets.ML_APP_ID }}
           ML_APP_SECRET: ${{ secrets.ML_APP_SECRET }}
         run: |
-          set -e
-
           echo "[INFO] ================================================"
-          echo "[INFO] ETL MERCADO LIVRE — INÍCIO"
+          echo "[INFO] BACKFILL ONBOARDING — INÍCIO"
           echo "[INFO] Data/Hora UTC: $(date -u)"
           echo "[INFO] Repositório: ${GITHUB_REPOSITORY}"
           echo "[INFO] Commit: ${GITHUB_SHA}"
           echo "[INFO] Branch: ${GITHUB_REF_NAME}"
           echo "[INFO] ================================================"
 
-          echo "[INFO] Validando conexão com banco (string não vazia)"
-          if [ -z "$SUPABASE_DB_CONNECTION_STRING" ]; then
-            echo "[ERROR] SUPABASE_DB_CONNECTION_STRING não definida"
-            exit 1
+          echo "[INFO] Executando script backend/etl/ml_etl_backfill_onboarding.py"
+          python backend/etl/ml_etl_backfill_onboarding.py
+
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "[ERROR] Backfill onboarding terminou com erro (exit_code=$EXIT_CODE)"
+            exit $EXIT_CODE
           fi
 
-          echo "[INFO] Executando ETL: backend/etl/ml_etl.py"
-          python backend/etl/ml_etl.py
-
           echo "[INFO] ================================================"
-          echo "[INFO] ETL MERCADO LIVRE — FINALIZADO COM SUCESSO"
+          echo "[INFO] BACKFILL ONBOARDING — FINALIZADO COM SUCESSO"
           echo "[INFO] Data/Hora UTC: $(date -u)"
           echo "[INFO] ================================================"
