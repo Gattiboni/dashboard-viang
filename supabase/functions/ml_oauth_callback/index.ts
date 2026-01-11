@@ -101,22 +101,31 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Página amigável de sucesso
     const html = `
-      <html>
-      <head><meta charset="utf-8"><title>Integração Mercado Livre</title></head>
-      <body style="font-family: system-ui; padding: 24px;">
-        <h2>Integração concluída com sucesso ✅</h2>
-        <p>Seus dados do Mercado Livre foram conectados ao Dashboard Viang.</p>
-        <p>Você já pode fechar esta aba.</p>
-      </body>
-      </html>
-    `;
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Integração concluída — Viang</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
 
-    return new Response(html, {
-      status: 200,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
+  <body style="margin:0; padding:0; background:#f5f6f8;">
+    <div style="
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+      <img
+        src="https://raw.githubusercontent.com/Gattiboni/dashboard-viang/feature/native-dashboard/frontend/src/assets/images/viang/Confirma%C3%A7%C3%A3o%20cliente%20novo%20Viang.png"
+        alt="Integração concluída com sucesso"
+        style="max-width:100%; height:auto;"
+      />
+    </div>
+  </body>
+</html>
+`;
 
   } catch (e) {
     console.error("Erro inesperado:", e);
