@@ -34,6 +34,11 @@
         tr.em-edicao {
             background-color: rgba(255, 193, 7, 0.15);
         }
+    
+        .badge.bg-orange {
+            background-color: #f39c12;
+            color: #fff;
+        }
     </style>
 
 
@@ -125,6 +130,15 @@
                 <!-- DataTables / Simple-DataTables (AdminDek) -->
                 <script src="../assets/js/plugins/simple-datatables.js"></script>
 
+                <script>
+                    // =====================================================
+                    // SUPABASE GLOBALS (usado por modais globais)
+                    // =====================================================
+                    window.SUPABASE_ANON_KEY =
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+                </script>
+
+
                 <!-- =================================================
                      SCRIPT — LOAD CLIENTES
                 ================================================= -->
@@ -133,6 +147,8 @@
 
                         const ENDPOINT =
                             'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/clientes';
+                        const PENDING_ENDPOINT =
+                            'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/clients-pending';
 
                         const ANON_KEY =
                             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
@@ -167,6 +183,110 @@
                             return `${dd}/${mm}/${yy} 00:00hs`;
                         }
 
+                        function buildPendingRow(p) {
+                            // Colunas reais da tabela (12):
+                            // 0 checkbox | 1 Logo | 2 Cliente | 3 Status | 4 Email | 5 Telefone | 6 Link | 7 Expira em | 8 Client ID | 9 User ID | 10 Pontos | 11 Seller Status
+                            const tr = document.createElement('tr');
+                            tr.dataset.clientId = p.client_id;
+
+                            tr.innerHTML = `
+        <td>
+            <input type="checkbox" class="cliente-select" />
+        </td>
+
+        <td>—</td>
+
+        <td>—</td>
+
+        <td><span class="badge bg-orange">pending</span></td>
+
+        <td>${p.ml_email ?? '—'}</td>
+
+        <td>—</td>
+
+        <td>—</td>
+
+        <td>—</td>
+
+        <td>${p.client_id ?? '—'}</td>
+
+        <td>—</td>
+
+        <td>—</td>
+
+        <td class="text-center align-middle">
+            <span
+                title="sem status"
+                style="
+                    display:inline-block;
+                    width:10px;
+                    height:10px;
+                    border-radius:50%;
+                    background-color:#bdc3c7;
+                ">
+            </span>
+        </td>
+    `;
+
+                            return tr;
+                        }
+
+                        async function loadPendingClientesIntoTable(tbody) {
+                            console.log('[clients-pending][ui] load-start', {
+                                endpoint: PENDING_ENDPOINT
+                            });
+
+                            try {
+                                const res = await fetch(PENDING_ENDPOINT, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${ANON_KEY}`,
+                                        'apikey': ANON_KEY
+                                    }
+                                });
+
+                                if (!res.ok) {
+                                    const text = await res.text().catch(() => null);
+                                    console.error('[clients-pending][ui] fetch-failed', {
+                                        status: res.status,
+                                        response: text
+                                    });
+                                    return;
+                                }
+
+                                const pendings = await res.json().catch(() => null);
+
+                                if (!Array.isArray(pendings) || pendings.length === 0) {
+                                    console.log('[clients-pending][ui] no-pending');
+                                    return;
+                                }
+
+                                console.log('[clients-pending][ui] fetch-success', {
+                                    count: pendings.length
+                                });
+
+                                // pending sempre no topo, sem inferir mais nada
+                                pendings.forEach(p => {
+                                    const tr = buildPendingRow(p);
+
+                                    // mantém o mesmo comportamento de seleção do botão Editar
+                                    const checkbox = tr.querySelector('.cliente-select');
+                                    checkbox.addEventListener('change', updateEditarButtonState);
+
+                                    tbody.prepend(tr);
+                                });
+
+                                console.log('[clients-pending][ui] render-complete', {
+                                    count: pendings.length
+                                });
+                            } catch (err) {
+                                console.error('[clients-pending][ui] unhandled-error', {
+                                    message: err instanceof Error ? err.message : String(err)
+                                });
+                            }
+                        }
+
                         function loadClientes() {
                             fetch(ENDPOINT, {
                                 method: 'POST',
@@ -177,7 +297,7 @@
                                 }
                             })
                                 .then(r => r.json())
-                                .then(rows => {
+                                .then(async rows => {
                                     tbody.innerHTML = '';
 
                                     rows.forEach(row => {
@@ -281,6 +401,11 @@
                                         clientesDT = null;
                                     }
                                     initClientesSorting();
+
+                                    // =====================================================
+                                    // PENDING — INJETA LINHAS (ANTES DO DATATABLE)
+                                    // =====================================================
+                                    await loadPendingClientesIntoTable(tbody);
 
                                     // =====================================================
                                     // TOOLTIP — DRILLDOWN CLIENTE (Bootstrap)
@@ -451,7 +576,19 @@
                             }
                         });
 
+                        // =====================================================
+                        // NOVO CLIENTE — ABRIR MODAL DE CONVITE
+                        // =====================================================
+                        const btnNovoCliente = document.getElementById('btn-novo-cliente');
+
+                        btnNovoCliente.addEventListener('click', () => {
+                            const modalEl = document.getElementById('inviteNewClientModal');
+                            const modal = new bootstrap.Modal(modalEl);
+                            modal.show();
+                        });
+
                     })();
+
                 </script>
 
 
@@ -466,6 +603,8 @@
 
     <!-- v.I.A.ng Modal (GLOBAL, UMA VEZ POR PÁGINA) -->
     @@include('../layouts/viang-ai.html')
+
+    @@include('../layouts/invite-new-client.html')
 
     @@include('../layouts/footer-js-root-viang.html')
 

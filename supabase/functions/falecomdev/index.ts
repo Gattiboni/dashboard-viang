@@ -1,5 +1,9 @@
 // supabase/functions/falecomdev/index.ts
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+
+declare const Deno: {
+    env: { get(name: string): string | undefined };
+    serve: (handler: (req: Request) => Response | Promise<Response>) => unknown;
+};
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -12,7 +16,7 @@ const corsHeaders: Record<string, string> = {
 
 const DEST_EMAIL = "alangattiboni@gmail.com";
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
     // ========= CORS preflight =========
     if (req.method === "OPTIONS") {
         return new Response("ok", {

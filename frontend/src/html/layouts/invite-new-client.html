@@ -1,0 +1,120 @@
+<!-- =====================================================
+     Invite New Client — MODAL (GLOBAL INCLUDE)
+     Arquivo: frontend/src/html/layouts/invite-new-client.html
+     Regra: Estrutura e estética idênticas ao viang-ai.html
+===================================================== -->
+
+<div class="modal fade" id="inviteNewClientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ti ti-user-plus" style="font-size:20px;"></i>
+                    <h5 class="modal-title mb-0">
+                        Novo Cliente
+                    </h5>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <p class="text-muted mb-4">
+                    Insira o email do cliente que deseja adicionar à plataforma.
+                    Deve ser o mesmo email de cliente associado à conta master do cliente no Mercado Livre
+                </p>
+
+                <div class="mb-3">
+                    <label for="invite-client-email" class="form-label">
+                        Email do cliente
+                    </label>
+                    <input type="email" class="form-control" id="invite-client-email" placeholder="email@cliente.com" />
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button" class="btn btn-primary" id="btn-invite-new-client">
+                    Enviar convite
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // =====================================================
+    // SUPABASE GLOBALS (usado por modais globais)
+    // =====================================================
+    window.SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmlzdW9vY3NyaGRxZHBtaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODE5NDMsImV4cCI6MjA3ODU1Nzk0M30.j62UrKBalzn0lfASjaQdvSrKSUJLmFFPAFbFa_61l8U';
+</script>
+
+<script>
+    (function inviteNewClientModal() {
+
+        const modalEl = document.getElementById('inviteNewClientModal');
+        if (!modalEl) return;
+
+        const emailInput = modalEl.querySelector('#invite-client-email');
+        const submitBtn = modalEl.querySelector('#btn-invite-new-client');
+
+        if (!emailInput || !submitBtn) return;
+
+        submitBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                alert('Informe um email válido');
+                return;
+            }
+
+            try {
+                const res = await fetch(
+                    'https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/invite-new-client',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+                            'apikey': window.SUPABASE_ANON_KEY
+                        },
+                        body: JSON.stringify({ email })
+                    }
+                );
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'invite-failed');
+                }
+
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+
+                emailInput.value = '';
+
+                // reload da tabela (fonte da verdade)
+                if (typeof loadClientes === 'function') {
+                    loadClientes();
+                }
+
+                alert('Convite enviado com sucesso');
+
+            } catch (err) {
+                console.error('[invite-new-client]', err);
+                alert('Erro ao enviar convite');
+            }
+        });
+
+    })();
+</script>
