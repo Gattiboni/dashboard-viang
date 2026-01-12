@@ -73,7 +73,7 @@ serve(async (req: Request): Promise<Response> => {
 
     // Upsert no banco
     const { error } = await supabase
-      .from("api_tokens", { schema: "dashboard" })
+      .from("api_tokens")
       .upsert(
         {
           client_id: state,
@@ -106,7 +106,7 @@ serve(async (req: Request): Promise<Response> => {
     // =====================================================
     try {
       const { error: logError } = await supabase
-        .from("updates_log", { schema: "dashboard" })
+        .from("updates_log")
         .insert({
           job_name: "ml_etl_backfill_onboarding",
           status: "info",
@@ -121,6 +121,53 @@ serve(async (req: Request): Promise<Response> => {
       }
     } catch (logEx) {
       console.error("Erro inesperado ao criar updates_log (backfill partial):", logEx);
+    }
+
+    // =====================================================
+    // DISPARA ETL BACKFILL ONBOARDING (GITHUB ACTIONS)
+    // =====================================================
+
+    try {
+      const githubToken = Deno.env.get("GITHUB_ACTIONS_TOKEN");
+
+      if (!githubToken) {
+        console.error("[ml_oauth_callback] github-token-missing");
+      } else {
+        const dispatchRes = await fetch(
+          "https://api.github.com/repos/Gattiboni/dashboard-viang/actions/workflows/etl-backfill-onboarding.yml/dispatches",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${githubToken}`,
+              "Accept": "application/vnd.github+json",
+              "Content-Type": "application/json",
+              "User-Agent": "viang-edge",
+            },
+            body: JSON.stringify({
+              ref: "main",
+            }),
+          }
+        );
+
+        if (!dispatchRes.ok) {
+          const text = await dispatchRes.text().catch(() => null);
+          console.error("[ml_oauth_callback] github-dispatch-failed", {
+            status: dispatchRes.status,
+            response: text,
+          });
+        } else {
+          console.log("[ml_oauth_callback] github-dispatch-success", {
+            workflow: "etl-backfill-onboarding.yml",
+            ref: "main",
+          });
+        }
+      }
+    } catch (dispatchErr) {
+      console.error("[ml_oauth_callback] github-dispatch-unhandled-error", {
+        message: dispatchErr instanceof Error
+          ? dispatchErr.message
+          : String(dispatchErr),
+      });
     }
 
     return new Response(null, {
