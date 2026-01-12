@@ -109,7 +109,7 @@ serve(async (req: Request): Promise<Response> => {
         .from("updates_log", { schema: "dashboard" })
         .insert({
           job_name: "ml_etl_backfill_onboarding",
-          status: "partial",
+          status: "info",
           event: "oauth_success",
           platform: "mercado_livre",
           details: { client_id: state },
@@ -123,34 +123,10 @@ serve(async (req: Request): Promise<Response> => {
       console.error("Erro inesperado ao criar updates_log (backfill partial):", logEx);
     }
 
-    const html = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <title>Integração concluída — Viang</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-  </head>
-
-  <body>
-    <table width="100%" height="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td align="center" valign="middle">
-          <img
-            src="https://raw.githubusercontent.com/Gattiboni/dashboard-viang/feature/native-dashboard/frontend/src/assets/images/viang/Confirma%C3%A7%C3%A3o%20cliente%20novo%20Viang.png"
-            alt="Integração concluída com sucesso"
-          />
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-`;
-
-    return new Response(html, {
-      status: 200,
+    return new Response(null, {
+      status: 302,
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
+        Location: "https://gattiboni.github.io/dashboard-viang-public/",
       },
     });
 
