@@ -239,7 +239,7 @@ serve(async (req) => {
                 },
                 body: JSON.stringify({
                     client_id,
-                    user_id: BigInt("0x" + client_id.replace(/-/g, "").slice(0, 16)).toString(),
+                    user_id: -Math.abs(email.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)),
                     display_name: email,
                     tipo_cliente: "externo",
                     status: "inactive",
