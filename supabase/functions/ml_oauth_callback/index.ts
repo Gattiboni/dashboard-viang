@@ -132,26 +132,26 @@ serve(async (req: Request): Promise<Response> => {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
 
-  <body style="margin:0; padding:0; background:#f5f6f8;">
-    <div style="
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    ">
-      <img
-        src="https://raw.githubusercontent.com/Gattiboni/dashboard-viang/feature/native-dashboard/frontend/src/assets/images/viang/Confirma%C3%A7%C3%A3o%20cliente%20novo%20Viang.png"
-        alt="Integração concluída com sucesso"
-        style="max-width:100%; height:auto;"
-      />
-    </div>
+  <body>
+    <table width="100%" height="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" valign="middle">
+          <img
+            src="https://raw.githubusercontent.com/Gattiboni/dashboard-viang/feature/native-dashboard/frontend/src/assets/images/viang/Confirma%C3%A7%C3%A3o%20cliente%20novo%20Viang.png"
+            alt="Integração concluída com sucesso"
+          />
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
 `;
 
     return new Response(html, {
       status: 200,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
     });
 
   } catch (e) {
