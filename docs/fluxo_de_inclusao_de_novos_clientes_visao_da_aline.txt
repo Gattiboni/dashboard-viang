@@ -1,0 +1,83 @@
+# Fluxo de inclusão de novos clientes na plataforma Viang
+
+Este texto explica, de forma simples e não técnica, como funciona o processo de inclusão de um novo cliente na plataforma Viang, desde o convite inicial até o início do processamento dos dados.
+
+---
+
+## 1. Convite do cliente
+
+Quando um novo cliente precisa ser incluído na plataforma, o primeiro passo é o envio de um convite por e-mail.
+
+Esse convite é enviado diretamente pela página "Clientes", no botão "Novo Cliente" para o endereço de e-mail associado à conta master do Mercado Livre do cliente. Ele contém um link seguro para que o cliente autorize a integração da sua conta do Mercado Livre com a plataforma.
+
+Basta que ele clique no link recebido e siga o fluxo que aparecerá na tela (apenas de autorização) e pronto! os dados do cliente passarão a integrar o banco de dados do Painel Viang. (A primeira "carga" de dados é automática, e consegue preencher os últimos 90 dias. Depois, isso é atualizado automaticamente todos os dias, às 3AM)
+
+---
+
+## 2. Autorização da conta do Mercado Livre
+
+Ao clicar no link recebido por e-mail, o cliente é direcionado para o ambiente oficial do Mercado Livre.
+
+Lá, ele:
+
+- faz login na própria conta do Mercado Livre (se ainda não estiver logado)
+- visualiza que está concedendo autorização para a Viang
+- confirma a autorização da integração
+
+Essa etapa garante que a Viang só tenha acesso aos dados que o próprio cliente permitiu explicitamente.
+
+---
+
+## 3. Confirmação visual da integração
+
+Depois que a autorização é concluída com sucesso, o cliente é redirecionado para uma página de confirmação visual.
+
+Essa página serve apenas para informar que:
+
+- a integração foi realizada com sucesso
+- nenhuma ação adicional é necessária naquele momento
+
+Ela não exige login, senha ou qualquer outra interação.
+
+---
+
+## 4. Registro interno e preparação dos dados
+
+Enquanto o cliente vê a confirmação visual, a plataforma Viang executa automaticamente processos internos:
+
+- registra que o cliente concluiu a autorização
+- armazena de forma segura os tokens de acesso
+- marca o cliente como pronto para o processamento inicial de dados
+
+Essas etapas são invisíveis para o cliente e acontecem em segundo plano.
+
+---
+
+##
+
+## 5. Cliente pronto para uso no dashboard
+
+Quando o processamento inicial termina, o cliente passa a estar totalmente integrado à plataforma.
+
+A partir desse ponto:
+
+- os dados começam a aparecer no dashboard
+- análises e relatórios ficam disponíveis
+- atualizações passam a ocorrer de forma contínua
+
+Se em algum momento o cliente precisar refazer a integração, o mesmo fluxo pode ser repetido de forma segura.
+
+---
+
+## Em resumo
+
+o fluxo funciona assim:
+
+1. Viang envia o convite por e-mail
+2. Cliente autoriza a integração no Mercado Livre
+3. Cliente vê a confirmação de sucesso
+4. Viang prepara e processa os dados automaticamente
+5. Dashboard passa a exibir informações do cliente
+
+Tudo foi desenhado para ser simples para o cliente e seguro para a plataforma.
+
