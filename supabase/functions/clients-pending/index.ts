@@ -78,13 +78,13 @@ serve(async (req) => {
         }
 
         // =====================================================
-        // 4.4) QUERY api_tokens (status = pending)
+        // 4.4) QUERY api_tokens (status = partial)
         // =====================================================
         console.log("[clients-pending] fetch-start");
 
         const res = await fetch(
             `${SUPABASE_URL}/rest/v1/api_tokens` +
-            `?status=eq.pending` +
+            `?status=eq.partial` +
             `&select=client_id,ml_email,status`,
             {
                 method: "GET",

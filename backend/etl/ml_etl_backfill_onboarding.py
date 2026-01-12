@@ -508,7 +508,7 @@ def main():
                 select id, details
                 from dashboard.updates_log
                 where job_name = 'ml_etl_backfill_onboarding'
-                  and status = 'pending'
+                  and status = 'partial'
                 order by created_at
                 limit 1
                 """
@@ -644,7 +644,7 @@ def main():
                         finished_at = now(),
                         notes = %s
                     where job_name = 'ml_etl_backfill_onboarding'
-                      and status = 'pending'
+                      and status = 'partial'
                     """,
                     (Json({"error": str(e)}),),
                 )

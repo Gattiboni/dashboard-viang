@@ -122,7 +122,7 @@ serve(async (req) => {
         }
 
         // =====================================================
-        // 4.5.1) GERA CLIENT_ID (estado pending)
+        // 4.5.1) GERA CLIENT_ID (estado partial)
         // =====================================================
 
         const client_id = crypto.randomUUID();
@@ -134,14 +134,14 @@ serve(async (req) => {
 
 
         // =====================================================
-        // 4.5.2) INSERT MÍNIMO EM api_tokens (pending)
+        // 4.5.2) INSERT MÍNIMO EM api_tokens (partial)
         // =====================================================
 
         console.log("[invite-new-client] insert-api_tokens-start", {
             client_id,
             email,
             platform: "mercado_livre",
-            status: "pending",
+            status: "partial",
         });
 
         const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -162,7 +162,7 @@ serve(async (req) => {
         }
 
         // =====================================================
-        // DELETE CONVITES PENDING ANTERIORES (MESMO EMAIL)
+        // DELETE CONVITES PARTIAL ANTERIORES (MESMO EMAIL)
         // =====================================================
 
         console.log("[invite-new-client] cleanup-pending-start", {
@@ -173,7 +173,7 @@ serve(async (req) => {
         const searchPendingRes = await fetch(
             `${supabaseUrl}/rest/v1/api_tokens` +
             `?ml_email=eq.${encodeURIComponent(email)}` +
-            `&status=eq.pending` +
+            `&status=eq.partial` +
             `&select=client_id`,
             {
                 method: "GET",
@@ -294,7 +294,7 @@ serve(async (req) => {
                 body: JSON.stringify({
                     client_id,
                     platform: "mercado_livre",
-                    status: "pending",
+                    status: "partial",
                     ml_email: email,
                 }),
             }
@@ -456,14 +456,14 @@ Se você não reconhece este convite, pode ignorar esta mensagem.
         console.log("[invite-new-client] success", {
             client_id,
             email,
-            status: "pending",
+            status: "partial",
         });
 
         return new Response(
             JSON.stringify({
                 client_id,
                 email,
-                status: "pending",
+                status: "partial",
             }),
             {
                 status: 200,

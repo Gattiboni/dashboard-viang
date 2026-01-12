@@ -1,0 +1,2799 @@
+Supabase Functions — Dump Completo
+Gerado por GitHub Copilot
+
+Arquivos incluídos (16):
+- supabase/functions/auth_pre_signup_domain_guard/index.ts
+- supabase/functions/cliente-detalhe/index.ts
+- supabase/functions/clientes/index.ts
+- supabase/functions/clients-pending/index.ts
+- supabase/functions/deno.json
+- supabase/functions/falecomdev/index.ts
+- supabase/functions/home-dashboard/index.ts
+- supabase/functions/import_map.json
+- supabase/functions/invite-new-client/index.ts
+- supabase/functions/metabase-embed-dashboard/index.ts
+- supabase/functions/ml_oauth_callback/.npmrc
+- supabase/functions/ml_oauth_callback/deno.json
+- supabase/functions/ml_oauth_callback/index.ts
+- supabase/functions/produtos-dashboard/index.ts
+- supabase/functions/users-config/index.ts
+- supabase/functions/viang-ai/index.ts
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/auth_pre_signup_domain_guard/index.ts
+----------------------------------------------------------------
+import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
+import { crypto } from "https://deno.land/std@0.203.0/crypto/mod.ts";
+
+/**
+ * Supabase Auth Hook — Before User Created
+ * Contrato REAL do Supabase:
+ * - Valida assinatura HMAC
+ * - Espera status 2xx ou erro
+ * - Ignora payload extra
+ */
+
+const HOOK_SECRET = Deno.env.get("AUTH_HOOK_SECRET");
+const EXPECTED_PROJECT_URL = Deno.env.get("SUPABASE_URL");
+const ALLOWED_DOMAIN = "@viang.com.br";
+const MASTER_EMAIL = "alangattiboni@gmail.com";
+
+serve(async (req) => {
+    const requestId = crypto.randomUUID();
+    const start = Date.now();
+
+    const log = (level: "info" | "warn" | "error", msg: string, extra: any = {}) => {
+        console.log(JSON.stringify({
+            level,
+            msg,
+            requestId,
+            ts: new Date().toISOString(),
+            ...extra,
+        }));
+    };
+
+    try {
+        if (!HOOK_SECRET) {
+            log("error", "HOOK_SECRET ausente");
+            return new Response("Hook misconfigured", { status: 500 });
+        }
+
+
+        // 2️⃣ Parse seguro do payload
+        let payload: any;
+        try {
+            payload = JSON.parse(rawBody);
+        } catch {
+            log("error", "JSON inválido");
+            return new Response("Invalid JSON", { status: 400 });
+        }
+
+        const email = payload?.user?.email;
+        const userId = payload?.user?.id;
+
+        if (!email || !userId) {
+            log("warn", "Payload incompleto", { payload });
+            return new Response("Invalid payload", { status: 400 });
+        }
+
+        // 3️⃣ Log de contrato implícito
+        log("info", "Signup attempt", {
+            email,
+            userId,
+            projectUrl: EXPECTED_PROJECT_URL,
+            hookUrl: req.url,
+        });
+
+        // 4️⃣ Exceção master
+        if (email === MASTER_EMAIL) {
+            log("info", "Master bypass");
+            return ok(start, requestId);
+        }
+
+        // 5️⃣ Regra de domínio
+        if (!email.endsWith(ALLOWED_DOMAIN)) {
+            log("warn", "Domínio não autorizado", { email });
+            return new Response(
+                JSON.stringify({ error: "Domínio não autorizado" }),
+                { status: 403 }
+            );
+        }
+
+        // 6️⃣ Sucesso
+        return ok(start, requestId);
+
+    } catch (err) {
+        log("error", "Erro interno", { error: String(err) });
+        return new Response("Internal error", { status: 500 });
+    }
+});
+
+function ok(start: number, requestId: string) {
+    return new Response(null, {
+        status: 200,
+        headers: {
+            "x-auth-hook": "pre-signup-domain-guard",
+            "x-request-id": requestId,
+            "x-processing-ms": String(Date.now() - start),
+        },
+    });
+}
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/auth_pre_signup_domain_guard/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/cliente-detalhe/index.ts
+----------------------------------------------------------------
+// supabase/functions/cliente-detalhe/index.ts
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* =====================================================
+ *  ENV
+ * ===================================================== */
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase env vars missing");
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+});
+
+/* =====================================================
+ *  CORS
+ * ===================================================== */
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+/* =====================================================
+ *  PERÍODO — igual ao padrão das edges existentes
+ * ===================================================== */
+
+type DashboardPeriod =
+    | { type: "preset"; preset: "7d" | "30d" | "90d"; start_date: null; end_date: null }
+    | { type: "custom"; preset: null; start_date: string; end_date: string };
+
+function iso(d: Date) {
+    return d.toISOString().slice(0, 10);
+}
+
+function resolvePeriod(p: DashboardPeriod) {
+    if (p.type === "custom") {
+        return { start_date: p.start_date, end_date: p.end_date };
+    }
+
+    const end = new Date();
+    const start = new Date(end);
+
+    if (p.preset === "7d") start.setDate(end.getDate() - 7);
+    if (p.preset === "30d") start.setDate(end.getDate() - 30);
+    if (p.preset === "90d") start.setDate(end.getDate() - 90);
+
+    return { start_date: iso(start), end_date: iso(end) };
+}
+
+/* =====================================================
+ *  RPC — cliente + período
+ * ===================================================== */
+
+async function rpcCliente(fn: string, client_id: string, period: DashboardPeriod) {
+    const { start_date, end_date } = resolvePeriod(period);
+
+    const { data, error } = await supabase
+        .schema("dashboard")
+        .rpc(fn, {
+            p_client_id: client_id,
+            p_start_date: start_date,
+            p_end_date: end_date,
+        });
+
+    if (error) throw error;
+    return data ?? [];
+}
+
+/* =====================================================
+ *  SAÚDE OPERACIONAL — agregação no backend (contagens)
+ * ===================================================== */
+
+async function loadSaudeOperacional(client_id: string, period: DashboardPeriod) {
+    console.log("[cliente-detalhe][saude-operacional] start", {
+        client_id,
+        period,
+    });
+
+    const gargalosRows = await rpcCliente(
+        "fn_gargalos_operacionais_por_sku_cliente",
+        client_id,
+        period
+    );
+
+    const riscoRows = await rpcCliente(
+        "fn_risco_operacional_por_sku_cliente",
+        client_id,
+        period
+    );
+
+    // Contagem distinta por sku (sem inferir colunas extras)
+    const gargalosSet = new Set(
+        (gargalosRows ?? []).map((r: any) => String(r?.sku ?? ""))
+            .filter((v: string) => v.length > 0)
+    );
+
+    const riscoSet = new Set(
+        (riscoRows ?? []).map((r: any) => String(r?.sku ?? ""))
+            .filter((v: string) => v.length > 0)
+    );
+
+    const payload = {
+        gargalos_operacionais: gargalosSet.size,
+        skus_em_risco: riscoSet.size,
+    };
+
+    console.log("[cliente-detalhe][saude-operacional] done", {
+        gargalos_rows: (gargalosRows ?? []).length,
+        risco_rows: (riscoRows ?? []).length,
+        payload,
+    });
+
+    return payload;
+}
+
+/* =====================================================
+ *  SERVER
+ * ===================================================== */
+
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    if (req.method !== "POST") {
+        return new Response(JSON.stringify({ error: "Method not allowed" }), {
+            status: 405,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+
+    try {
+        const url = new URL(req.url);
+        const route = url.pathname.split("/").pop();
+
+        if (!route) {
+            return new Response(JSON.stringify({ error: "Invalid route" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        const body = await req.json();
+
+        const client_id = body?.client_id;
+        if (!client_id) {
+            return new Response(JSON.stringify({ error: "client_id missing" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        // period = resto do body (o front manda {client_id, type, preset, start_date, end_date})
+        const period: DashboardPeriod = {
+            type: body?.type,
+            preset: body?.preset ?? null,
+            start_date: body?.start_date ?? null,
+            end_date: body?.end_date ?? null,
+        };
+
+        console.log("[cliente-detalhe] request", {
+            route,
+            client_id,
+            period,
+        });
+
+        const map: Record<string, () => Promise<any>> = {
+            // KPIs
+            "kpi-receita-bruta": () =>
+                rpcCliente("fn_kpi_receita_bruta_cliente", client_id, period),
+
+            "kpi-ticket-medio": () =>
+                rpcCliente("fn_kpi_ticket_medio_cliente", client_id, period),
+
+            // Saúde Operacional (novo card)
+            "saude-operacional": () =>
+                loadSaudeOperacional(client_id, period),
+            // Drilldown — Saúde Operacional (linhas para modal)
+            "saude-operacional-detalhe-gargalos": () =>
+                rpcCliente("fn_gargalos_operacionais_por_sku_cliente", client_id, period),
+
+            "saude-operacional-detalhe-risco": () =>
+                rpcCliente("fn_risco_operacional_por_sku_cliente", client_id, period),
+
+            // Charts
+            "chart-receita-por-semana": () =>
+                rpcCliente("fn_chart_receita_por_semana_cliente", client_id, period),
+
+            "chart-pedidos-dia": () =>
+                rpcCliente("fn_chart_pedidos_por_dia_cliente", client_id, period),
+
+            "chart-unidades-categoria": () =>
+                rpcCliente("fn_chart_unidades_categoria_cliente", client_id, period),
+
+            "chart-distribuicao-categoria": () =>
+                rpcCliente("fn_chart_distribuicao_categoria_cliente", client_id, period),
+
+            "chart-top-skus": () =>
+                rpcCliente("fn_chart_top_skus_cliente", client_id, period),
+
+            // Alerts
+            "alerts-pior-queda-produtos": () =>
+                rpcCliente("fn_pior_queda_produtos_semana_cliente", client_id, period),
+
+            // Produtos (cliente) — usados na página Cliente Detalhe
+            "chart-margem-produto-bubble": () =>
+                rpcCliente("fn_margem_operacional_por_produto_cliente", client_id, period),
+
+            "table-curva-abc-produtos": () =>
+                rpcCliente("fn_curva_abc_produtos_cliente", client_id, period),
+
+            "table-tabelao-produtos": () =>
+                rpcCliente("fn_tabelao_produtos_cliente", client_id, period),
+        };
+
+        if (!map[route]) {
+            return new Response(JSON.stringify({ error: "Unknown route" }), {
+                status: 404,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        const data = await map[route]();
+
+        return new Response(JSON.stringify(data ?? []), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    } catch (err) {
+        console.error("[cliente-detalhe]", err);
+
+        return new Response(
+            JSON.stringify({
+                error: "Internal error",
+                details: err instanceof Error ? err.message : String(err),
+            }),
+            {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            },
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/cliente-detalhe/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/clientes/index.ts
+----------------------------------------------------------------
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase env vars missing");
+}
+
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+        auth: { persistSession: false },
+        db: { schema: "dashboard" }
+    }
+);
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    try {
+        const url = new URL(req.url);
+        const route = url.pathname.split("/").pop();
+
+        if (route !== "clientes") {
+            return new Response(JSON.stringify([]), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        // =====================================================
+        // BODY OPCIONAL
+        // =====================================================
+        let body: any = null;
+        try {
+            body = await req.json();
+        } catch {
+            body = null;
+        }
+
+        // =====================================================
+        // 1) SAVE OVERRIDES
+        // =====================================================
+        if (body?.action === "save_overrides" && Array.isArray(body.payload)) {
+
+            const rows = body.payload.map((item: any) => ({
+                client_id: item.client_id,
+                ml_email_override: item.ml_email ?? null,
+                ml_phone_override: item.ml_phone ?? null,
+                ml_perma_link_override: item.ml_perma_link ?? null,
+                ml_logo_override: item.ml_logo ?? null,
+                updated_at: new Date().toISOString()
+            }));
+
+            const { error } = await supabase
+                .from("client_overrides")
+                .upsert(rows, { onConflict: "client_id" });
+
+            if (error) {
+                throw error;
+            }
+
+            return new Response(
+                JSON.stringify([]),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        // =====================================================
+        // 2) LIST CLIENTES
+        // =====================================================
+
+        // 2.1 api_tokens (fonte da verdade)
+        const { data: tokens, error: tokensError } = await supabase
+            .from("api_tokens")
+            .select(`
+                ml_logo,
+                display_name,
+                status,
+                expires_at,
+                client_id,
+                user_id,
+                ml_nickname,
+                ml_first_name,
+                ml_last_name,
+                ml_email,
+                ml_phone,
+                ml_seller_status,
+                ml_points,
+                ml_site_id,
+                ml_perma_link
+            `)
+            .eq("platform", "mercado_livre")
+            .order("display_name", { ascending: true });
+
+        if (tokensError) {
+            throw tokensError;
+        }
+
+        // 2.2 overrides (sem relação declarada)
+        const { data: overrides, error: overridesError } = await supabase
+            .from("client_overrides")
+            .select(`
+                client_id,
+                ml_logo_override,
+                ml_email_override,
+                ml_phone_override,
+                ml_perma_link_override
+            `);
+
+        if (overridesError) {
+            throw overridesError;
+        }
+
+        // 2.3 map de overrides por client_id
+        const overridesMap = new Map(
+            (overrides ?? []).map(o => [o.client_id, o])
+        );
+
+        // 2.4 merge final
+        const merged = (tokens ?? []).map(row => {
+            const o = overridesMap.get(row.client_id);
+
+            return {
+                ml_logo: o?.ml_logo_override ?? row.ml_logo,
+                display_name: row.display_name,
+                status: row.status,
+                expires_at: row.expires_at,
+
+                client_id: row.client_id,
+                user_id: row.user_id,
+                ml_nickname: row.ml_nickname,
+                ml_first_name: row.ml_first_name,
+                ml_last_name: row.ml_last_name,
+
+                ml_email: o?.ml_email_override ?? row.ml_email,
+                ml_phone: o?.ml_phone_override ?? row.ml_phone,
+
+                ml_seller_status: row.ml_seller_status,
+                ml_points: row.ml_points,
+                ml_site_id: row.ml_site_id,
+
+                ml_perma_link: o?.ml_perma_link_override ?? row.ml_perma_link
+            };
+        });
+
+        return new Response(JSON.stringify(merged), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+    } catch (err) {
+        console.error("[clientes]", err);
+
+        // CONTRATO DO FRONT: SEMPRE ARRAY
+        return new Response(JSON.stringify([]), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+        });
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/clientes/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/clients-pending/index.ts
+----------------------------------------------------------------
+// =====================================================
+// 1) RUNTIME E IMPORTS
+// =====================================================
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+
+
+// =====================================================
+// 2) ENV (SEGREDOS E VARIÁVEIS)
+// =====================================================
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+
+// =====================================================
+// 3) CORS (PADRÃO FIXO)
+// =====================================================
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+
+// =====================================================
+// 4) SERVER / HANDLER
+// =====================================================
+
+serve(async (req) => {
+    console.log("[clients-pending] request-start", {
+        method: req.method,
+        url: req.url,
+    });
+
+    // =====================================================
+    // 4.1) CORS PREFLIGHT
+    // =====================================================
+    if (req.method === "OPTIONS") {
+        console.log("[clients-pending] cors-preflight");
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    // =====================================================
+    // 4.2) VALIDAÇÃO DE MÉTODO
+    // =====================================================
+    if (req.method !== "POST") {
+        console.warn("[clients-pending] invalid-method", {
+            method: req.method,
+        });
+        return new Response(
+            JSON.stringify([]),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+    }
+
+    try {
+        // =====================================================
+        // 4.3) VALIDA ENV
+        // =====================================================
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+            console.error("[clients-pending] supabase-env-missing", {
+                hasUrl: Boolean(SUPABASE_URL),
+                hasServiceKey: Boolean(SUPABASE_SERVICE_ROLE_KEY),
+            });
+            return new Response(
+                JSON.stringify([]),
+                {
+                    status: 200,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        // =====================================================
+        // 4.4) QUERY api_tokens (status = pending)
+        // =====================================================
+        console.log("[clients-pending] fetch-start");
+
+        const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/api_tokens` +
+            `?status=eq.pending` +
+            `&select=client_id,ml_email,status`,
+            {
+                method: "GET",
+                headers: {
+                    "Accept-Profile": "dashboard",
+                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (!res.ok) {
+            const errorText = await res.text().catch(() => null);
+
+            console.error("[clients-pending] fetch-failed", {
+                status: res.status,
+                response: errorText,
+            });
+
+            return new Response(
+                JSON.stringify([]),
+                {
+                    status: 200,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        const data = await res.json();
+
+        console.log("[clients-pending] fetch-success", {
+            count: Array.isArray(data) ? data.length : 0,
+        });
+
+        // =====================================================
+        // 4.5) RESPONSE DE SUCESSO
+        // =====================================================
+        return new Response(
+            JSON.stringify(Array.isArray(data) ? data : []),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+
+    } catch (err) {
+        console.error("[clients-pending] unhandled-error", {
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+        });
+
+        return new Response(
+            JSON.stringify([]),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/clients-pending/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/deno.json
+----------------------------------------------------------------
+{
+  "compilerOptions": {
+    "lib": [
+      "deno.ns",
+      "dom"
+    ],
+    "strict": true
+  }
+}
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/deno.json
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/falecomdev/index.ts
+----------------------------------------------------------------
+// supabase/functions/falecomdev/index.ts
+
+declare const Deno: {
+    env: { get(name: string): string | undefined };
+    serve: (handler: (req: Request) => Response | Promise<Response>) => unknown;
+};
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+const corsHeaders: Record<string, string> = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type",
+    "Access-Control-Max-Age": "86400",
+};
+
+const DEST_EMAIL = "alangattiboni@gmail.com";
+
+Deno.serve(async (req: Request): Promise<Response> => {
+    // ========= CORS preflight =========
+    if (req.method === "OPTIONS") {
+        return new Response("ok", {
+            status: 200,
+            headers: corsHeaders,
+        });
+    }
+
+    // Quick env check route (optional for debugging)
+    if (new URL(req.url).pathname.endsWith("/falecomdev-env-check")) {
+        return new Response(
+            JSON.stringify({ hasResendKey: Boolean(RESEND_API_KEY) }),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            },
+        );
+    }
+
+    try {
+        if (!RESEND_API_KEY) {
+            return new Response(
+                JSON.stringify({
+                    error: "resend-key-missing",
+                    hint:
+                        "Set RESEND_API_KEY as a Function secret (supabase secrets set RESEND_API_KEY=...) and redeploy.",
+                }),
+                {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        const url = new URL(req.url);
+        const route = url.pathname.split("/").pop();
+        if (route !== "falecomdev") {
+            return new Response(
+                JSON.stringify({ error: "not-found" }),
+                {
+                    status: 404,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        if (req.method !== "POST") {
+            return new Response(
+                JSON.stringify({ error: "method-not-allowed" }),
+                {
+                    status: 405,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        const contentType = req.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+            return new Response(
+                JSON.stringify({ error: "invalid-content-type" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        const body = await req.json().catch(() => null) as
+            | { title?: string; message?: string; files?: string[]; timestamp?: string }
+            | null;
+
+        if (!body) {
+            return new Response(
+                JSON.stringify({ error: "invalid-json" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        const title = String(body.title || "").trim();
+        const message = String(body.message || "").trim();
+        const files = Array.isArray(body.files) ? body.files : [];
+        const timestamp = body.timestamp || new Date().toISOString();
+
+        if (!title || !message) {
+            return new Response(
+                JSON.stringify({ error: "missing-title-or-message" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        const emailBody = `
+Nova mensagem recebida via Fale com o Dev
+
+Título:
+${title}
+
+Mensagem:
+${message}
+
+Recebido em:
+${timestamp}
+
+Links dos arquivos:
+${files.map((u) => `- ${u}`).join("\n")}
+    `.trim();
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        let resendRes: Response;
+        try {
+            resendRes = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${RESEND_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    from: "Viang <no-reply@resend.dev>",
+                    to: [DEST_EMAIL],
+                    subject: title,
+                    text: emailBody,
+                }),
+                signal: controller.signal,
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
+
+        const resendJson = await resendRes.json().catch(() => null);
+        if (!resendRes.ok) {
+            console.error("[falecomdev] Resend error", resendRes.status, resendJson);
+            return new Response(
+                JSON.stringify({
+                    error: "resend-failed",
+                    status: resendRes.status,
+                    details: resendJson ?? null,
+                }),
+                {
+                    status: 502,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        return new Response(
+            JSON.stringify({ ok: true, resend: resendJson }),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            },
+        );
+    } catch (err) {
+        console.error("[falecomdev] internal error", err);
+        const message = err instanceof Error ? err.message : String(err);
+        return new Response(
+            JSON.stringify({ error: "internal-error", message }),
+            {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            },
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/falecomdev/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/home-dashboard/index.ts
+----------------------------------------------------------------
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase env vars missing");
+}
+
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } }
+);
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+type DashboardPeriod =
+    | { type: "preset"; preset: "7d" | "30d" | "90d"; start_date: null; end_date: null }
+    | { type: "custom"; preset: null; start_date: string; end_date: string };
+
+function iso(d: Date) {
+    return d.toISOString().slice(0, 10);
+}
+
+function resolvePeriod(p: DashboardPeriod) {
+    if (p.type === "custom") {
+        return { start_date: p.start_date, end_date: p.end_date };
+    }
+
+    const end = new Date();
+    const start = new Date(end);
+
+    if (p.preset === "7d") start.setDate(end.getDate() - 7);
+    if (p.preset === "30d") start.setDate(end.getDate() - 30);
+    if (p.preset === "90d") start.setDate(end.getDate() - 90);
+
+    return { start_date: iso(start), end_date: iso(end) };
+}
+
+async function rpc(fn: string, period: DashboardPeriod) {
+    const { start_date, end_date } = resolvePeriod(period);
+
+    const { data, error } = await supabase
+        .schema("dashboard")
+        .rpc(fn, {
+            p_start_date: start_date,
+            p_end_date: end_date,
+        });
+
+    if (error) throw error;
+    return data;
+}
+
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    if (req.method !== "POST") {
+        return new Response(JSON.stringify({ error: "Method not allowed" }), {
+            status: 405,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+
+    try {
+        const url = new URL(req.url);
+        const route = url.pathname.split("/").pop()!;
+        const period = await req.json();
+
+        const map: Record<string, () => Promise<any>> = {
+            "kpi-receita-bruta": () => rpc("fn_kpi_receita_bruta", period),
+            "chart-receita-por-semana": () => rpc("fn_chart_receita_por_semana", period),
+            "chart-pedidos-dia": () => rpc("fn_chart_pedidos_por_dia", period),
+            "chart-unidades-categoria": () => rpc("fn_chart_unidades_categoria", period),
+            "chart-top-skus": () => rpc("fn_chart_top_skus", period),
+            "chart-distribuicao-categoria": () => rpc("fn_chart_distribuicao_categoria", period),
+            "chart-ticket-medio-categoria": () => rpc("fn_chart_ticket_medio_categoria", period),
+            "chart-receita-cliente-semana": () => rpc("fn_chart_receita_cliente_semana", period),
+        };
+
+        if (!map[route]) {
+            return new Response(JSON.stringify({ error: "Unknown route" }), {
+                status: 404,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        const data = await map[route]();
+
+        return new Response(JSON.stringify(data ?? []), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+    } catch (err) {
+        console.error("[home-dashboard]", err);
+        return new Response(
+            JSON.stringify({
+                error: "Internal error",
+                details: (err instanceof Error) ? err.message : String(err),
+            }),
+            {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/home-dashboard/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/import_map.json
+----------------------------------------------------------------
+{
+    "imports": {
+        "std/": "https://deno.land/std@0.224.0/",
+        "supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+    }
+}
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/import_map.json
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/invite-new-client/index.ts
+----------------------------------------------------------------
+// =====================================================
+// 1) RUNTIME E IMPORTS
+// =====================================================
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+
+
+// =====================================================
+// 2) ENV (SEGREDOS E VARIÁVEIS)
+// =====================================================
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+// =====================================================
+// 3) CORS (PADRÃO FIXO)
+// =====================================================
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+
+// =====================================================
+// 4) SERVER / HANDLER
+// =====================================================
+
+serve(async (req) => {
+    console.log("[invite-new-client] request-start", {
+        method: req.method,
+        url: req.url,
+        headers: {
+            "content-type": req.headers.get("content-type"),
+            "authorization": !!req.headers.get("authorization"),
+            "apikey": !!req.headers.get("apikey"),
+        },
+    });
+
+    // =====================================================
+    // 4.1) CORS PREFLIGHT (OPTIONS)
+    // =====================================================
+    if (req.method === "OPTIONS") {
+        console.log("[invite-new-client] cors-preflight");
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    // =====================================================
+    // 4.2) VALIDAÇÃO DE MÉTODO
+    // =====================================================
+    if (req.method !== "POST") {
+        console.warn("[invite-new-client] invalid-method", {
+            method: req.method,
+        });
+        return new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+
+    try {
+        // =====================================================
+        // 4.3) VALIDAÇÃO DE CONTENT-TYPE
+        // =====================================================
+        const contentType = req.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+            console.warn("[invite-new-client] invalid-content-type", {
+                contentType,
+            });
+            return new Response(
+                JSON.stringify({ error: "invalid-content-type" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        // =====================================================
+        // 4.4) PARSE DO BODY (JSON)
+        // =====================================================
+        let body: any;
+        try {
+            body = await req.json();
+        } catch {
+            console.error("[invite-new-client] invalid-json-body");
+            return new Response(
+                JSON.stringify({ error: "invalid-json" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        // =====================================================
+        // 4.5) VALIDAÇÃO DE PAYLOAD
+        // =====================================================
+        const email = String(body?.email || "").trim();
+        if (!email) {
+            console.warn("[invite-new-client] email-missing", {
+                body,
+            });
+            return new Response(
+                JSON.stringify({ error: "email-missing" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+        if (!RESEND_API_KEY) {
+            console.error("[invite-new-client] resend-key-missing");
+            return new Response(
+                JSON.stringify({ error: "resend-key-missing" }),
+                {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        // =====================================================
+        // 4.5.1) GERA CLIENT_ID (estado pending)
+        // =====================================================
+
+        const client_id = crypto.randomUUID();
+
+        console.log("[invite-new-client] client-id-generated", {
+            client_id,
+            email,
+        });
+
+
+        // =====================================================
+        // 4.5.2) INSERT MÍNIMO EM api_tokens (pending)
+        // =====================================================
+
+        console.log("[invite-new-client] insert-api_tokens-start", {
+            client_id,
+            email,
+            platform: "mercado_livre",
+            status: "pending",
+        });
+
+        const supabaseUrl = Deno.env.get("SUPABASE_URL");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+        if (!supabaseUrl || !serviceKey) {
+            console.error("[invite-new-client] supabase-env-missing", {
+                hasUrl: Boolean(supabaseUrl),
+                hasServiceKey: Boolean(serviceKey),
+            });
+            return new Response(
+                JSON.stringify({ error: "supabase-env-missing" }),
+                {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        // =====================================================
+        // DELETE CONVITES PENDING ANTERIORES (MESMO EMAIL)
+        // =====================================================
+
+        console.log("[invite-new-client] cleanup-pending-start", {
+            email,
+        });
+
+        // Busca client_ids pendentes com este email
+        const searchPendingRes = await fetch(
+            `${supabaseUrl}/rest/v1/api_tokens` +
+            `?ml_email=eq.${encodeURIComponent(email)}` +
+            `&status=eq.pending` +
+            `&select=client_id`,
+            {
+                method: "GET",
+                headers: {
+                    "Accept-Profile": "dashboard",
+                    "apikey": serviceKey,
+                    "Authorization": `Bearer ${serviceKey}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (searchPendingRes.ok) {
+            const pendingRecords = await searchPendingRes.json().catch(() => []);
+
+            if (Array.isArray(pendingRecords) && pendingRecords.length > 0) {
+                console.log("[invite-new-client] cleanup-pending-found", {
+                    email,
+                    count: pendingRecords.length,
+                });
+
+                // Delete em clients (cascateia para api_tokens via FK)
+                for (const record of pendingRecords) {
+                    await fetch(
+                        `${supabaseUrl}/rest/v1/clients?client_id=eq.${record.client_id}`,
+                        {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Profile": "dashboard",
+                                "apikey": serviceKey,
+                                "Authorization": `Bearer ${serviceKey}`,
+                            },
+                        }
+                    );
+                }
+
+                console.log("[invite-new-client] cleanup-pending-complete", {
+                    email,
+                    deleted: pendingRecords.length,
+                });
+            }
+        }
+
+        // =====================================================
+        // INSERT EM CLIENTS (PRIMEIRO - OBRIGATÓRIO)
+        // =====================================================
+
+        console.log("[invite-new-client] insert-clients-start", {
+            client_id,
+            email,
+        });
+
+        const insertClientsResponse = await fetch(
+            `${supabaseUrl}/rest/v1/clients`,
+            {
+                method: "POST",
+                headers: {
+                    "apikey": serviceKey,
+                    "Authorization": `Bearer ${serviceKey}`,
+                    "Content-Type": "application/json",
+                    "Content-Profile": "dashboard",
+                    "Prefer": "return=minimal",
+                },
+                body: JSON.stringify({
+                    client_id,
+                    user_id: BigInt("0x" + client_id.replace(/-/g, "").slice(0, 16)).toString(),
+                    display_name: email,
+                    tipo_cliente: "externo",
+                    status: "inactive",
+                }),
+            }
+        );
+
+        if (!insertClientsResponse.ok) {
+            const errorText = await insertClientsResponse.text().catch(() => null);
+
+            console.error("[invite-new-client] insert-clients-failed", {
+                client_id,
+                email,
+                status: insertClientsResponse.status,
+                response: errorText,
+            });
+
+            return new Response(
+                JSON.stringify({ error: "insert-clients-failed" }),
+                {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        console.log("[invite-new-client] insert-clients-success", {
+            client_id,
+            email,
+        });
+
+        // =====================================================
+        // INSERT EM API_TOKENS (DEPOIS - DEPENDE DE CLIENTS)
+        // =====================================================
+
+        console.log("[invite-new-client] insert-api_tokens-start", {
+            client_id,
+            email,
+        });
+
+        const insertResponse = await fetch(
+            `${supabaseUrl}/rest/v1/api_tokens`,
+            {
+                method: "POST",
+                headers: {
+                    "apikey": serviceKey,
+                    "Authorization": `Bearer ${serviceKey}`,
+                    "Content-Type": "application/json",
+                    "Content-Profile": "dashboard",
+                    "Prefer": "return=minimal",
+                },
+                body: JSON.stringify({
+                    client_id,
+                    platform: "mercado_livre",
+                    status: "pending",
+                    ml_email: email,
+                }),
+            }
+        );
+
+        if (!insertResponse.ok) {
+            const errorText = await insertResponse.text().catch(() => null);
+
+            console.error("[invite-new-client] insert-api_tokens-failed", {
+                client_id,
+                email,
+                status: insertResponse.status,
+                response: errorText,
+            });
+
+            return new Response(
+                JSON.stringify({ error: "insert-api_tokens-failed" }),
+                {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        console.log("[invite-new-client] insert-api_tokens-success", {
+            client_id,
+            email,
+        });
+
+        // =====================================================
+        // 4.6) AÇÃO PRINCIPAL — INVITE NEW CLIENT
+        // =====================================================
+
+        console.log("[invite-new-client] action-start", {
+            email,
+        });
+
+        // =====================================================
+        // 4.6.1) GERA LINK OAUTH MERCADO LIVRE
+        // =====================================================
+
+        const ML_OAUTH_CLIENT_ID = Deno.env.get("ML_APP_ID");
+        const ML_OAUTH_REDIRECT_URI = "https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/ml_oauth_callback";
+
+        if (!ML_OAUTH_CLIENT_ID || !ML_OAUTH_REDIRECT_URI) {
+            console.error("[invite-new-client] ml-oauth-env-missing", {
+                hasClientId: Boolean(ML_OAUTH_CLIENT_ID),
+                hasRedirectUri: Boolean(ML_OAUTH_REDIRECT_URI),
+                client_id,
+            });
+
+            return new Response(
+                JSON.stringify({ error: "ml-oauth-env-missing" }),
+                {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        const oauthUrl =
+            `https://auth.mercadolivre.com.br/authorization` +
+            `?response_type=code` +
+            `&client_id=${encodeURIComponent(ML_OAUTH_CLIENT_ID)}` +
+            `&redirect_uri=${encodeURIComponent(ML_OAUTH_REDIRECT_URI)}` +
+            `&state=${encodeURIComponent(client_id)}`;
+
+        console.log("[invite-new-client] oauth-url-generated", {
+            client_id,
+            redirect_uri: ML_OAUTH_REDIRECT_URI,
+        });
+
+
+        // =====================================================
+        // 4.6.2) MONTA EMAIL DE CONVITE (COM OAUTH)
+        // =====================================================
+
+        const emailBody = `
+Você foi convidado(a) para acessar o Dashboard Viang.
+
+Para concluir o cadastro e conectar sua conta do Mercado Livre,
+clique no link abaixo e aceite as permissões solicitadas:
+
+${oauthUrl}
+
+Se você não reconhece este convite, pode ignorar esta mensagem.
+`.trim();
+
+        console.log("[invite-new-client] email-body-ready", {
+            client_id,
+            email,
+        });
+
+
+        // =====================================================
+        // 4.6.3) ENVIO DE EMAIL VIA RESEND
+        // =====================================================
+
+        console.log("[invite-new-client] resend-send-start", {
+            client_id,
+            email,
+        });
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        let resendRes: Response;
+
+        try {
+            resendRes = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${RESEND_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    from: "Viang <no-reply@painel.viang.com.br>",
+                    to: [email],
+                    subject: "Convite para acessar o Dashboard Viang",
+                    text: emailBody,
+                }),
+                signal: controller.signal,
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
+
+        const resendJson = await resendRes.json().catch(() => null);
+
+        if (!resendRes.ok) {
+            console.error("[invite-new-client] resend-failed", {
+                client_id,
+                email,
+                status: resendRes.status,
+                response: resendJson,
+            });
+
+            return new Response(
+                JSON.stringify({
+                    error: "resend-failed",
+                    status: resendRes.status,
+                }),
+                {
+                    status: 502,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        console.log("[invite-new-client] resend-send-success", {
+            client_id,
+            email,
+        });
+
+        // =====================================================
+        // 4.7) RESPONSE DE SUCESSO
+        // =====================================================
+
+        console.log("[invite-new-client] success", {
+            client_id,
+            email,
+            status: "pending",
+        });
+
+        return new Response(
+            JSON.stringify({
+                client_id,
+                email,
+                status: "pending",
+            }),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+
+    } catch (err) {
+        // =====================================================
+        // 4.8) RESPONSE DE ERRO (CONTRATO DO FRONT)
+        // =====================================================
+
+        console.error("[invite-new-client] unhandled-error", {
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+        });
+
+        return new Response(
+            JSON.stringify({
+                detail: err instanceof Error ? err.message : String(err),
+            }),
+            {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+    }
+});
+
+// =====================================================
+// 5) TRATAMENTO DE ERRO (CONTRATO DO FRONT)
+// =====================================================
+
+// O tratamento de erro desta edge é realizado
+// diretamente dentro do handler (bloco 4),
+// seguindo o padrão das edges TIPO C:
+//
+// - status HTTP != 200 em falha
+// - payload JSON com campo `detail`
+// - headers CORS preservados
+//
+// Não existe handler de erro separado neste padrão.
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/invite-new-client/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/metabase-embed-dashboard/index.ts
+----------------------------------------------------------------
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { create, getNumericDate } from 'https://deno.land/x/djwt@v2.8/mod.ts'
+
+const METABASE_SITE_URL = 'https://metabase-production-21b7.up.railway.app'
+const METABASE_SECRET_KEY = Deno.env.get('METABASE_EMBED_SECRET_KEY')
+
+if (!METABASE_SECRET_KEY) {
+    throw new Error('METABASE_EMBED_SECRET_KEY missing')
+}
+
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+}
+
+serve(async (req) => {
+    // Preflight CORS
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders })
+    }
+
+    try {
+        if (req.method !== 'POST') {
+            return new Response('Method Not Allowed', {
+                status: 405,
+                headers: corsHeaders
+            })
+        }
+
+        // (por enquanto) sem params, só validar pipeline fim-a-fim
+        const payload = {
+            resource: { dashboard: 9 },
+            params: {},
+            exp: getNumericDate(60 * 60 * 24) // 24 horas
+        }
+
+        // djwt v2.8 no edge runtime: use CryptoKey (não Uint8Array)
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(METABASE_SECRET_KEY),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        )
+
+        const token = await create({ alg: 'HS256', typ: 'JWT' }, payload, cryptoKey)
+
+        const embedUrl =
+            `${METABASE_SITE_URL}/embed/dashboard/${token}` +
+            `#bordered=false&titled=false`
+
+        return new Response(JSON.stringify({ embed_url: embedUrl }), {
+            headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json'
+            }
+        })
+    } catch (err) {
+        console.error('Erro ao gerar embed:', err)
+
+        return new Response(JSON.stringify({ error: 'Erro interno ao gerar embed' }), {
+            status: 500,
+            headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json'
+            }
+        })
+    }
+})
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/metabase-embed-dashboard/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/ml_oauth_callback/.npmrc
+----------------------------------------------------------------
+# Configuration for private npm package dependencies
+# For more information on using private registries with Edge Functions, see:
+# https://supabase.com/docs/guides/functions/import-maps#importing-from-private-registries
+
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/ml_oauth_callback/.npmrc
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/ml_oauth_callback/deno.json
+----------------------------------------------------------------
+{
+  "verify_jwt": false,
+  "compilerOptions": {
+    "lib": [
+      "deno.ns",
+      "dom"
+    ],
+    "strict": true
+  }
+}
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/ml_oauth_callback/deno.json
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/ml_oauth_callback/index.ts
+----------------------------------------------------------------
+// supabase/functions/ml_oauth_callback/index.ts
+/// <reference types="https://esm.sh/@supabase/functions-js/dist/edge-runtime.d.ts" />
+
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// Config Supabase
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  db: { schema: 'dashboard' }
+});
+
+
+// Config Mercado Livre
+const mlAppId = Deno.env.get("ML_APP_ID")!;
+const mlAppSecret = Deno.env.get("ML_APP_SECRET")!;
+
+// Redirect URI da integração (tem que ser esta exata)
+const redirectUri =
+  "https://cbnisuoocsrhdqdpmips.supabase.co/functions/v1/ml_oauth_callback";
+
+serve(async (req: Request): Promise<Response> => {
+  try {
+    const url = new URL(req.url);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state"); // client_id
+
+    if (!code || !state) {
+      return new Response(
+        `Erro na autorização do Mercado Livre.<br/>
+         Parâmetros inválidos.<br/>
+         code=${code} state=${state}`,
+        { status: 400, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    }
+
+    // Trocar code por token
+    const body = new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: mlAppId,
+      client_secret: mlAppSecret,
+      code,
+      redirect_uri: redirectUri,
+    });
+
+    const tokenResp = await fetch("https://api.mercadolibre.com/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+
+    if (!tokenResp.ok) {
+      const text = await tokenResp.text();
+      console.error("Erro ao trocar code por token:", text);
+      return new Response(
+        `Erro ao finalizar integração com Mercado Livre.<br/>
+         HTTP ${tokenResp.status}<br/>
+         ${text}`,
+        { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    }
+
+    const tokenData = await tokenResp.json() as any;
+
+    const accessToken = tokenData.access_token as string;
+    const refreshToken = tokenData.refresh_token as string;
+    const expiresIn = Number(tokenData.expires_in ?? 0);
+    const userId = String(tokenData.user_id ?? "");
+
+    const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
+    // Upsert no banco
+    const { error } = await supabase
+      .from("api_tokens", { schema: "dashboard" })
+      .upsert(
+        {
+          client_id: state,
+          platform: "mercado_livre",
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: expiresAt,
+          status: "active",
+          user_id: userId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "client_id,platform" }
+      );
+
+
+
+
+
+    if (error) {
+      console.error("Erro ao salvar tokens:", error);
+      return new Response(
+        `Tokens criados, mas erro ao salvar no banco.<br/>
+         ${error.message}`,
+        { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    }
+
+    // =====================================================
+    // MARCA BACKFILL ONBOARDING COMO PENDENTE (updates_log)
+    // =====================================================
+    try {
+      const { error: logError } = await supabase
+        .from("updates_log", { schema: "dashboard" })
+        .insert({
+          job_name: "ml_etl_backfill_onboarding",
+          status: "partial",
+          event: "oauth_success",
+          platform: "mercado_livre",
+          details: { client_id: state },
+          notes: { source: "ml_oauth_callback" },
+        });
+
+      if (logError) {
+        console.error("Erro ao criar updates_log (backfill partial):", logError);
+      }
+    } catch (logEx) {
+      console.error("Erro inesperado ao criar updates_log (backfill partial):", logEx);
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Integração concluída — Viang</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body style="margin:0; padding:0; background:#f5f6f8;">
+    <div style="
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+      <img
+        src="https://raw.githubusercontent.com/Gattiboni/dashboard-viang/feature/native-dashboard/frontend/src/assets/images/viang/Confirma%C3%A7%C3%A3o%20cliente%20novo%20Viang.png"
+        alt="Integração concluída com sucesso"
+        style="max-width:100%; height:auto;"
+      />
+    </div>
+  </body>
+</html>
+`;
+
+    return new Response(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+
+  } catch (e) {
+    console.error("Erro inesperado:", e);
+    return new Response(
+      "Erro inesperado ao finalizar autorização.",
+      { status: 500, headers: { "Content-Type": "text/plain; charset=utf-8" } },
+    );
+  }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/ml_oauth_callback/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/produtos-dashboard/index.ts
+----------------------------------------------------------------
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* =====================================================
+ *  ENV
+ * ===================================================== */
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase env vars missing");
+}
+
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase env vars missing");
+}
+
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } }
+);
+
+/* =====================================================
+ *  CORS
+ * ===================================================== */
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+/* =====================================================
+ *  PERÍODO — IGUAL À HOME
+ * ===================================================== */
+
+type DashboardPeriod =
+    | { type: "preset"; preset: "7d" | "30d" | "90d"; start_date: null; end_date: null }
+    | { type: "custom"; preset: null; start_date: string; end_date: string };
+
+function iso(d: Date) {
+    return d.toISOString().slice(0, 10);
+}
+
+function resolvePeriod(p: DashboardPeriod) {
+    if (p.type === "custom") {
+        return { start_date: p.start_date, end_date: p.end_date };
+    }
+
+    const end = new Date();
+    const start = new Date(end);
+
+    if (p.preset === "7d") start.setDate(end.getDate() - 7);
+    if (p.preset === "30d") start.setDate(end.getDate() - 30);
+    if (p.preset === "90d") start.setDate(end.getDate() - 90);
+
+    return { start_date: iso(start), end_date: iso(end) };
+}
+
+/* =====================================================
+ *  RPC — IGUAL À HOME
+ * ===================================================== */
+
+async function rpc(fn: string, period: DashboardPeriod) {
+    const { start_date, end_date } = resolvePeriod(period);
+
+    const { data, error } = await supabase
+        .schema("dashboard")
+        .rpc(fn, {
+            p_start_date: start_date,
+            p_end_date: end_date,
+        });
+
+    if (error) throw error;
+    return data;
+}
+
+/* =====================================================
+ *  SERVER
+ * ===================================================== */
+
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    if (req.method !== "POST") {
+        return new Response(
+            JSON.stringify({ error: "Method not allowed" }),
+            {
+                status: 405,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+    }
+
+    try {
+        const url = new URL(req.url);
+        const route = url.pathname.split("/").pop();
+
+        if (!route) {
+            return new Response(
+                JSON.stringify({ error: "Invalid route" }),
+                {
+                    status: 400,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        const period = await req.json();
+
+        /* =================================================
+         *  MAPA DE ENDPOINTS — PRODUTOS (NORMALIZADO)
+         * ================================================= */
+
+        const map: Record<string, () => Promise<any>> = {
+            "alerts-pior-queda-produtos": () =>
+                rpc("fn_pior_queda_produtos_semana", period),
+
+            "alerts-pior-queda-vendedores": () =>
+                rpc("fn_pior_queda_vendedores_semana", period),
+
+            "alerts-pior-margem-produto": () =>
+                rpc("fn_pior_margem_implicita_produto", period),
+
+            "chart-margem-produto-bubble": async () => {
+                const { data, error } = await supabase
+                    .schema("dashboard")
+                    .rpc("fn_margem_operacional_por_produto");
+
+                if (error) throw error;
+                return data;
+            },
+
+            "chart-giro-produtos-tempo": async () => {
+                const { start_date, end_date } = resolvePeriod(period);
+
+                const { data, error } = await supabase
+                    .schema("dashboard")
+                    .rpc("fn_giro_produtos_tempo", {
+                        p_data_inicio: start_date,
+                        p_data_fim: end_date,
+                    });
+
+                if (error) throw error;
+                return data;
+            },
+
+            "table-curva-abc-produtos": async () => {
+                const { start_date, end_date } = resolvePeriod(period);
+
+                const { data, error } = await supabase
+                    .schema("dashboard")
+                    .rpc("fn_curva_abc_produtos", {
+                        p_data_inicio: start_date,
+                        p_data_fim: end_date,
+                    });
+
+                if (error) throw error;
+                return data;
+            },
+
+            "table-tabelao-produtos": async () => {
+                const { data, error } = await supabase
+                    .schema("dashboard")
+                    .rpc("fn_tabelao_produtos", {
+                        p_data_inicio: resolvePeriod(period).start_date,
+                        p_data_fim: resolvePeriod(period).end_date,
+                    });
+
+                if (error) throw error;
+
+                return data ?? [];
+            },
+        };
+
+        if (!map[route]) {
+            return new Response(
+                JSON.stringify({ error: "Unknown route" }),
+                {
+                    status: 404,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        const data = await map[route]();
+
+        return new Response(JSON.stringify(data ?? []), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+    } catch (err) {
+        console.error("[produtos-dashboard]", err);
+
+        return new Response(
+            JSON.stringify({
+                error: "Internal error",
+                details: err instanceof Error ? err.message : String(err),
+            }),
+            {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/produtos-dashboard/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/users-config/index.ts
+----------------------------------------------------------------
+// supabase/functions/users-config/index.ts
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* =====================================================
+ * ENV
+ * ===================================================== */
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Missing Supabase environment variables");
+}
+
+/* =====================================================
+ * CLIENT
+ * ===================================================== */
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } }
+);
+
+/* =====================================================
+ * CORS
+ * ===================================================== */
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+/* =====================================================
+ * HANDLERS
+ * ===================================================== */
+async function listUsers() {
+    const { data, error } = await supabase
+        .schema("dashboard")
+        .from("users")
+        .select(`
+            id,
+            email,
+            role,
+            permission_level,
+            status,
+            is_master,
+            created_at,
+            updated_at
+        `)
+        .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    return data ?? [];
+}
+
+/* =====================================================
+ * SERVER
+ * ===================================================== */
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    if (req.method !== "POST") {
+        return new Response(
+            JSON.stringify({ error: "Method not allowed" }),
+            {
+                status: 405,
+                headers: {
+                    ...corsHeaders,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+    }
+
+    try {
+        const route = new URL(req.url).pathname.split("/").pop();
+
+        const map: Record<string, () => Promise<any>> = {
+            list: () => listUsers(),
+        };
+
+        if (!route || !map[route]) {
+            return new Response(
+                JSON.stringify({ error: "Unknown route" }),
+                { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        const data = await map[route]();
+
+        return new Response(JSON.stringify(data), {
+            status: 200,
+            headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+            },
+        });
+    } catch (err) {
+        console.error("[users-config]", err);
+
+        return new Response(
+            JSON.stringify({
+                error: "Internal error",
+                details:
+                    err instanceof Error ? err.message : String(err),
+            }),
+            {
+                status: 500,
+                headers: {
+                    ...corsHeaders,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/users-config/index.ts
+================================================================
+
+================================================================
+INÍCIO DO ARQUIVO: supabase/functions/viang-ai/index.ts
+----------------------------------------------------------------
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+        db: {
+            schema: "dashboard"
+        }
+    }
+);
+
+type ActionType = "explain" | "analyze" | "ask";
+type ContextType = "page" | "element";
+
+interface ViangRequest {
+    client_id: string;
+    page: string;
+    context: ContextType;
+
+    page_semantic_context?: any;
+
+    element_id?: string | null;
+    element_type?: string | null;
+
+    action_type: ActionType;
+    user_prompt?: string | null;
+
+    period: {
+        start: string;
+        end: string;
+    };
+}
+
+serve(async (req) => {
+    try {
+        if (req.method === "OPTIONS") {
+            return new Response("ok", { headers: corsHeaders });
+        }
+
+        if (req.method !== "POST") {
+            return new Response("Method not allowed", {
+                status: 405,
+                headers: corsHeaders
+            });
+        }
+
+        let payload: ViangRequest;
+
+        try {
+            payload = await req.json();
+        } catch {
+            return new Response("Invalid JSON payload", {
+                status: 400,
+                headers: corsHeaders
+            });
+        }
+
+        const {
+            client_id,
+            page,
+            context,
+            element_id = null,
+            element_type = null,
+            action_type,
+            user_prompt = null,
+            period
+        } = payload;
+
+        // ===== Validações explícitas (sem inferência) =====
+        if (!client_id || !page || !context || !action_type || !period) {
+            return new Response("Missing required fields", {
+                status: 400,
+                headers: corsHeaders
+            });
+        }
+
+        if (context === "element") {
+            // Guardrail 1 — identidade mínima do elemento
+            if (!element_id || !element_type) {
+                return new Response(
+                    "element_id e element_type são obrigatórios quando context=element",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            // Guardrail 2 — contexto semântico da página é obrigatório
+            if (!payload.page_semantic_context) {
+                return new Response(
+                    "page_semantic_context é obrigatório para contexto element",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            // Guardrail 3 — componentes precisam existir
+            if (!Array.isArray(payload.page_semantic_context.components)) {
+                return new Response(
+                    "page_semantic_context.components ausente ou inválido",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+        }
+
+        if (action_type === "ask" && !user_prompt) {
+            return new Response("user_prompt is required for action_type=ask", {
+                status: 400,
+                headers: corsHeaders
+            });
+        }
+
+        // ===== Hash determinístico do cache =====
+        const hashBase = JSON.stringify({
+            client_id,
+            page,
+            context,
+            element_id,
+            action_type,
+            period,
+            user_prompt: action_type === "ask" ? user_prompt : null
+        });
+
+        const hash = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(hashBase)
+        ).then(buf =>
+            Array.from(new Uint8Array(buf))
+                .map(b => b.toString(16).padStart(2, "0"))
+                .join("")
+        );
+
+        // ===== 1) Tenta ler cache válido =====
+        const { data: cached } = await supabase
+            .from("insight_cache")
+            .select("response")
+            .eq("hash", hash)
+            .gt("expires_at", new Date().toISOString())
+            .limit(1)
+            .maybeSingle();
+
+        if (cached?.response) {
+            return new Response(
+                JSON.stringify({ source: "cache", response: cached.response }),
+                {
+                    headers: {
+                        ...corsHeaders,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
+        // ===== 2) Limpa lixo vencido desse contexto =====
+        await supabase
+            .from("insight_cache")
+            .delete()
+            .eq("client_id", client_id)
+            .eq("page", page)
+            .eq("scope", context)
+            .eq("action_type", action_type)
+            .lte("expires_at", new Date().toISOString());
+
+        let elementData: any = null;
+
+        if (context === "element") {
+            // =====================================================
+            // 1) MAPEAMENTO DETERMINÍSTICO element_id → data_source
+            // =====================================================
+            const components = payload.page_semantic_context?.components;
+
+            if (!Array.isArray(components)) {
+                return new Response(
+                    "page_semantic_context.components ausente ou inválido para contexto element",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const matches = components.filter(c => c.id === element_id);
+
+            if (matches.length === 0) {
+                return new Response(
+                    `Elemento ${element_id} não encontrado no page_semantic_context`,
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            if (matches.length > 1) {
+                return new Response(
+                    `Mapeamento ambíguo: múltiplos componentes com id ${element_id}`,
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const component = matches[0];
+
+            if (!component.data_source || !component.data_source.name) {
+                return new Response(
+                    `Data source ausente ou inválido para o elemento ${element_id}`,
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const dataSourceName = component.data_source.name;
+
+            // Resolve função base conforme a página/semântica
+            const fnBase = (
+                payload.page_semantic_context?.page_data_source?.name
+                || (page ? `${page}-dashboard` : null)
+                || 'home-dashboard'
+            );
+
+            // =====================================================
+            // 2) Consome a MESMA rota que o gráfico usa
+            // =====================================================
+            const elementRes = await fetch(
+                `${SUPABASE_URL}/functions/v1/${fnBase}/${dataSourceName}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        type: "custom",
+                        preset: null,
+                        start_date: payload.period.start,
+                        end_date: payload.period.end
+                    })
+                }
+            );
+
+            if (!elementRes.ok) {
+                const err = await elementRes.text();
+                return new Response(err, {
+                    status: 500,
+                    headers: corsHeaders
+                });
+            }
+
+            const raw = await elementRes.json();
+
+            elementData =
+                Array.isArray(raw)
+                    ? {
+                        exists: true,
+                        has_data: raw.length > 0,
+                        rows: raw,
+                        count: raw.length
+                    }
+                    : {
+                        exists: false,
+                        has_data: false,
+                        rows: [],
+                        count: 0
+                    };
+        }
+
+        let pageData: any = null;
+
+        if (context === "page" && action_type === "analyze") {
+            const components = payload.page_semantic_context?.components;
+
+            if (!Array.isArray(components)) {
+                return new Response(
+                    "components ausente ou inválido no page_semantic_context",
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+
+            const results: Record<string, any> = {};
+
+            for (const c of components) {
+                if (!c?.data_source?.name) {
+                    continue;
+                }
+
+                // Resolve função base conforme a página/semântica
+                const fnBase = (
+                    payload.page_semantic_context?.page_data_source?.name
+                    || (page ? `${page}-dashboard` : null)
+                    || 'home-dashboard'
+                );
+
+                const res = await fetch(
+                    `${SUPABASE_URL}/functions/v1/${fnBase}/${c.data_source.name}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            type: "custom",
+                            preset: null,
+                            start_date: payload.period.start,
+                            end_date: payload.period.end
+                        })
+                    }
+                );
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    return new Response(err, {
+                        status: 500,
+                        headers: corsHeaders
+                    });
+                }
+
+                const raw = await res.json();
+
+                const normalized =
+                    Array.isArray(raw)
+                        ? {
+                            exists: true,
+                            has_data: raw.length > 0,
+                            rows: raw,
+                            count: raw.length
+                        }
+                        : {
+                            exists: false,
+                            has_data: false,
+                            rows: [],
+                            count: 0
+                        };
+
+                results[c.id] = {
+                    id: c.id,
+                    type: c.type,
+                    data_source: c.data_source.name,
+                    state: normalized.has_data ? "populated" : "empty",
+                    rows: normalized.rows,
+                    count: normalized.count
+                };
+            }
+
+            pageData = results;
+        }
+
+
+        // ===== 3) Define modelo conforme ação =====
+        let model = "gpt-4.1-mini";
+
+        if (action_type === "analyze" && context === "page") {
+            model = "gpt-5.2";
+        } else if (action_type === "analyze") {
+            model = "gpt-4.1";
+        } else if (action_type === "explain" && context === "page") {
+            model = "gpt-4.1";
+        }
+
+        // ===== 4) Monta prompt base (simples e controlado) =====
+
+        // 4.1 — Carrega dicionário para IA (runtime controlado)
+        const { data: dictionaryRows, error: dictError } = await supabase
+            .from("vw_data_dictionary_ai_runtime")
+            .select("*");
+
+        if (dictError) {
+            console.error("[viang-ai] erro ao carregar dicionário IA runtime", dictError);
+        }
+
+        const dataDictionary =
+            Array.isArray(dictionaryRows)
+                ? dictionaryRows.map(r => r.markdown_doc).join("\n")
+                : "";
+
+        // 4.2 — Prompt institucional (sem inferência)
+        const systemPrompt = `
+Você é a v.I.A.ng, a IA analítica da plataforma Viang.
+
+Você fala com autoridade institucional.
+Você nunca generaliza dashboards.
+Você nunca descreve abstrações que não existam no produto.
+
+FONTE ÚNICA DE VERDADE CONCEITUAL:
+${dataDictionary}
+
+Regras absolutas:
+- Use EXCLUSIVAMENTE os conceitos definidos acima.
+- Nunca invente métricas, entidades ou significados.
+- Nunca descreva algo que não exista na página.
+- Nunca use linguagem genérica ou defensiva.
+`;
+
+        let userContent = "";
+
+        if (action_type === "explain") {
+            userContent = context === "page"
+                ? `
+Você está explicando uma página da plataforma Viang.
+
+Contexto semântico da página:
+${JSON.stringify(payload.page_semantic_context, null, 2)}
+
+Explique de forma institucional, clara e aplicada o papel dessa página,
+como ela funciona e para que serve no contexto da Viang.
+`
+                : `
+Explique o elemento "${element_id}" (tipo: ${element_type}) da página "${page}".
+
+Dados reais do elemento:
+${JSON.stringify(elementData, null, 2)}
+`;
+        }
+
+        if (action_type === "analyze") {
+            userContent = context === "page"
+                ? `Você está analisando a página "${page}" no período de ${period.start} a ${period.end}.
+
+Interprete os dados como um gestor faria ao olhar este dashboard.
+
+Regras de linguagem (obrigatórias):
+- NÃO mencione termos técnicos (payload, JSON, schema, endpoint, RPC, edge, função, query, view, tabela, etc.).
+- NÃO cite nomes de IDs técnicos (como "chart-..." ou "kpi-...") no texto final.
+- Use linguagem clara, direta e executiva.
+
+Regras de análise (obrigatórias):
+- Considere SOMENTE os componentes que possuem dados no período.
+- Quando um indicador estiver zerado ou ausente, explique o impacto disso no negócio.
+- Se houver divergência entre indicadores, proponha até 2 hipóteses de negócio, sem tecnicês.
+
+Formato:
+- Texto corrido
+- Conclusões práticas
+- 3 ações recomendadas
+
+Dados consolidados da página:
+${JSON.stringify(pageData, null, 2)}`
+                : `Você está analisando um elemento específico da página "${page}" no período de ${period.start} a ${period.end}.
+
+Interprete os dados como um gestor faria ao olhar **apenas este indicador**, considerando impacto, tendência e tomada de decisão.
+
+Regras de linguagem (obrigatórias):
+- NÃO mencione termos técnicos (payload, JSON, schema, endpoint, RPC, edge, função, query, view, tabela, etc.).
+- NÃO cite nomes de IDs técnicos no texto final.
+- Fale sempre em termos de negócio, nunca de implementação.
+- Seja direto, executivo e acionável.
+
+    Regras de análise (obrigatórias):
+    - Se \`has_data = false\`, explique o impacto prático da ausência de dados.
+- Se houver dados, descreva o comportamento observado (tendência, concentração, variação).
+- Não descreva o gráfico. Descreva o que ele **significa**.
+- Não generalize para a página inteira.
+
+Formato:
+- 1 parágrafo executivo
+- 3 insights objetivos
+- 2 ações recomendadas
+
+Dados do elemento:
+${JSON.stringify(elementData, null, 2)}`;
+        }
+
+        // ===== 4.3 — Guardrail de expansão de contexto (modelo C) =====
+        if (action_type === "ask") {
+            const prompt = user_prompt || "";
+
+            const requiresExpansion =
+                /cruz(a|e|ar)|compar(a|e|ar)|outra página|outro dashboard|fora desta página|home|financeiro|geral/i
+                    .test(prompt);
+
+            if (requiresExpansion && !(payload as any).context_expanded) {
+                return new Response(
+                    JSON.stringify({
+                        source: "system",
+                        response:
+                            "Para responder a essa pergunta, preciso expandir o contexto de análise para incluir dados de outras páginas ou domínios. Deseja prosseguir?"
+                    }),
+                    {
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+        }
+
+        // ===== 5) Chamada OpenAI =====
+        const openaiRes = await fetch("https://api.openai.com/v1/responses", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${OPENAI_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model,
+                input: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userContent }
+                ]
+            })
+        });
+
+        if (!openaiRes.ok) {
+            const err = await openaiRes.text();
+            return new Response(err, {
+                status: 500,
+                headers: corsHeaders
+            });
+        }
+
+        const openaiJson = await openaiRes.json();
+        const aiResponse =
+            openaiJson.output_text ??
+            openaiJson.output?.[0]?.content?.[0]?.text ??
+            "Sem resposta";
+
+        // ===== 6) Observabilidade — uso da v.I.A.ng =====
+        try {
+            const requiresExpansion =
+                action_type === "ask" &&
+                /cruz(a|e|ar)|compar(a|e|ar)|outra página|outro dashboard|fora desta página|home|financeiro|geral/i
+                    .test(user_prompt || "");
+
+            const sessionId =
+                req.headers.get("x-viang-session-id") ||
+                crypto.randomUUID();
+
+            await supabase
+                .from("viang_ai_usage_log")
+                .insert({
+                    user_id: req.headers.get("x-user-id") || null,
+                    client_id,
+                    session_id: sessionId,
+
+                    page,
+                    context,
+                    element_id,
+                    element_type,
+
+                    action_type,
+                    user_prompt,
+
+                    requires_context_expansion: requiresExpansion,
+                    context_expanded: false,
+
+                    is_follow_up: false,
+                    interaction_index: 1,
+
+                    response_source: "openai",
+                    response_length: aiResponse.length
+                });
+        } catch (logErr) {
+            console.error("[viang-ai] falha ao registrar uso da v.I.A.ng", logErr);
+        }
+
+        // ===== 7) Salva no cache =====
+        await supabase.from("insight_cache").insert({
+            client_id,
+            page,
+            scope: context,
+            element_id,
+            action_type,
+            prompt: user_prompt,
+            context: payload,
+            response: aiResponse,
+            hash,
+            expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+        });
+
+        return new Response(
+            JSON.stringify({ source: "openai", response: aiResponse }),
+            {
+                headers: {
+                    ...corsHeaders,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    } catch (err) {
+        console.error("[viang-ai] erro não tratado", err);
+        return new Response(
+            "Internal Server Error",
+            {
+                status: 500,
+                headers: corsHeaders
+            }
+        );
+    }
+});
+----------------------------------------------------------------
+FIM DO ARQUIVO: supabase/functions/viang-ai/index.ts
+================================================================

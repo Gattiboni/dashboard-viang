@@ -198,7 +198,7 @@
 
         <td>—</td>
 
-        <td><span class="badge bg-orange">pending</span></td>
+        <td><span class="badge bg-orange">partial</span></td>
 
         <td>${p.ml_email ?? '—'}</td>
 
@@ -266,7 +266,7 @@
                                     count: pendings.length
                                 });
 
-                                // pending sempre no topo, sem inferir mais nada
+                                // partial sempre no topo, sem inferir mais nada
                                 pendings.forEach(p => {
                                     const tr = buildPendingRow(p);
 
@@ -403,7 +403,7 @@
                                     initClientesSorting();
 
                                     // =====================================================
-                                    // PENDING — INJETA LINHAS (ANTES DO DATATABLE)
+                                    // PARTIAL — INJETA LINHAS (ANTES DO DATATABLE)
                                     // =====================================================
                                     await loadPendingClientesIntoTable(tbody);
 

@@ -109,7 +109,7 @@ serve(async (req: Request): Promise<Response> => {
         .from("updates_log", { schema: "dashboard" })
         .insert({
           job_name: "ml_etl_backfill_onboarding",
-          status: "pending",
+          status: "partial",
           event: "oauth_success",
           platform: "mercado_livre",
           details: { client_id: state },
@@ -117,10 +117,10 @@ serve(async (req: Request): Promise<Response> => {
         });
 
       if (logError) {
-        console.error("Erro ao criar updates_log (backfill pending):", logError);
+        console.error("Erro ao criar updates_log (backfill partial):", logError);
       }
     } catch (logEx) {
-      console.error("Erro inesperado ao criar updates_log (backfill pending):", logEx);
+      console.error("Erro inesperado ao criar updates_log (backfill partial):", logEx);
     }
 
     const html = `
