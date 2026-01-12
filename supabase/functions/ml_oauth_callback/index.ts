@@ -170,6 +170,61 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
+    try {
+      // =====================================================
+      // DIAGNÓSTICO — NÃO vaza valores, só lista keys
+      // =====================================================
+      const envObj = Deno.env.toObject();
+      const envKeys = Object.keys(envObj);
+
+      console.log("[ml_oauth_callback] env-diagnostic", {
+        hasGithubActionsTokenKey: envKeys.includes("GITHUB_ACTIONS_TOKEN"),
+        githubLikeKeys: envKeys.filter((k) => k.includes("GITHUB")),
+        supabaseLikeKeys: envKeys.filter((k) => k.includes("SUPABASE")),
+      });
+
+      const githubToken = Deno.env.get("GITHUB_ACTIONS_TOKEN");
+
+      if (!githubToken) {
+        console.error("[ml_oauth_callback] github-token-missing");
+      } else {
+        const dispatchRes = await fetch(
+          "https://api.github.com/repos/Gattiboni/dashboard-viang/actions/workflows/etl-backfill-onboarding.yml/dispatches",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${githubToken}`,
+              "Accept": "application/vnd.github+json",
+              "Content-Type": "application/json",
+              "User-Agent": "viang-edge",
+            },
+            body: JSON.stringify({
+              ref: "main",
+            }),
+          }
+        );
+
+        if (!dispatchRes.ok) {
+          const text = await dispatchRes.text().catch(() => null);
+          console.error("[ml_oauth_callback] github-dispatch-failed", {
+            status: dispatchRes.status,
+            response: text,
+          });
+        } else {
+          console.log("[ml_oauth_callback] github-dispatch-success", {
+            workflow: "etl-backfill-onboarding.yml",
+            ref: "main",
+          });
+        }
+      }
+    } catch (dispatchErr) {
+      console.error("[ml_oauth_callback] github-dispatch-unhandled-error", {
+        message: dispatchErr instanceof Error
+          ? dispatchErr.message
+          : String(dispatchErr),
+      });
+    }
+
     return new Response(null, {
       status: 302,
       headers: {
