@@ -244,6 +244,78 @@ def refresh_ml_token(conn, client_id, refresh_token):
 
 
 # ----------------------------------------------------
+# 2.4 Orders Search (Paginado • Exaustivo • Diário)
+# ----------------------------------------------------
+
+
+def fetch_orders_search_paged(
+    seller_id: str,
+    access_token: str,
+    date_from_iso: str,
+    date_to_iso: str,
+) -> dict:
+    """
+    Busca orders via /orders/search com paginação completa (offset/limit),
+    retornando um payload único com results[] concatenado.
+    """
+    orders_url = "https://api.mercadolibre.com/orders/search"
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    limit = 50
+    offset = 0
+    all_results = []
+
+    log_info(
+        f"Buscando pedidos (paginado) seller={seller_id} from={date_from_iso} to={date_to_iso}"
+    )
+
+    while True:
+        params = {
+            "seller": seller_id,
+            "order.date_created.from": date_from_iso,
+            "order.date_created.to": date_to_iso,
+            "sort": "date_desc",
+            "offset": offset,
+            "limit": limit,
+            "access_token": access_token,
+        }
+
+        log_info(f"Orders/search page offset={offset} limit={limit}")
+
+        resp = requests.get(orders_url, headers=headers, params=params, timeout=30)
+
+        if resp.status_code != 200:
+            raise requests.HTTPError(response=resp)
+
+        page = resp.json()
+        results = page.get("results", []) or []
+
+        all_results.extend(results)
+
+        if len(results) < limit:
+            break
+
+        offset += limit
+
+    merged = {
+        "query": {
+            "seller": seller_id,
+            "order.date_created.from": date_from_iso,
+            "order.date_created.to": date_to_iso,
+            "sort": "date_desc",
+        },
+        "results": all_results,
+        "paging": {
+            "limit": limit,
+            "total_results": len(all_results),
+        },
+    }
+
+    return merged
+
+
+# ----------------------------------------------------
 # 3. Registrar raw_events
 # ----------------------------------------------------
 
@@ -289,11 +361,9 @@ def process_raw_events_to_fact(conn):
                 info = item.get("item", {}) or {}
                 sku = str(info.get("id", "")) or None
                 qty = item.get("quantity", 0) or 0
-                price = float(item.get("unit_price", 0) or 0)
-                receita = qty * price
 
                 fact_rows.append(
-                    (client_id, data, sku, "mercado_livre", sku, qty, receita)
+                    (client_id, data, sku, "mercado_livre", sku, qty, None)
                 )
 
     if not fact_rows:
@@ -330,7 +400,7 @@ def aggregate_daily(conn):
             )
             select
                 gen_random_uuid(), client_id, data,
-                sum(receita_liquida),
+                null as total_receita,
                 sum(coalesce(lucro,0)),
                 avg(margem),
                 sum(quantidade_vendida),
@@ -397,9 +467,10 @@ def main():
             register_log(conn, "warning", {"msg": msg})
             return
 
-        date_from = (
-            datetime.now(timezone.utc).date() - timedelta(days=7)
-        ).isoformat() + "T00:00:00.000-00:00"
+        # ETL diário: janela do dia anterior (UTC)
+        day = datetime.now(timezone.utc).date() - timedelta(days=1)
+        date_from = day.isoformat() + "T00:00:00.000-00:00"
+        date_to = day.isoformat() + "T23:59:59.999-00:00"
 
         total_orders = 0
         clientes_processados = 0
@@ -426,28 +497,14 @@ def main():
             except Exception as e:
                 log_warn(f"Falha ao atualizar perfil ML → {e}")
 
-            # 2) buscar pedidos (FIX 401 – formato confirmado pela Sara)
+            # 2) buscar pedidos (FIX 401 – mantendo comportamento atual)
             try:
-                orders_url = "https://api.mercadolibre.com/orders/search"
-                params = {
-                    "seller": user_id,  # formato que FUNCIONA
-                    "order.status": "paid",  # usado nos testes bem-sucedidos
-                    "sort": "date_desc",
-                    "access_token": access,  # redundância necessária (ML ainda aceita)
-                }
-
-                headers = {
-                    "Authorization": f"Bearer {access}"  # mantém a forma oficial
-                }
-
-                resp = requests.get(
-                    orders_url, headers=headers, params=params, timeout=30
+                orders = fetch_orders_search_paged(
+                    seller_id=user_id,
+                    access_token=access,
+                    date_from_iso=date_from,
+                    date_to_iso=date_to,
                 )
-
-                if resp.status_code != 200:
-                    raise requests.HTTPError(response=resp)
-
-                orders = resp.json()
 
             except requests.HTTPError as e:
                 if e.response is not None and e.response.status_code == 401:
@@ -461,20 +518,19 @@ def main():
                         clientes_pulados.append(str(client_id))
                         continue
 
-                    # tentar novamente com token renovado
-                    params["access_token"] = new_access
-                    headers["Authorization"] = f"Bearer {new_access}"
+                    access = new_access
 
-                    resp2 = requests.get(
-                        orders_url, headers=headers, params=params, timeout=30
-                    )
-
-                    if resp2.status_code != 200:
+                    try:
+                        orders = fetch_orders_search_paged(
+                            seller_id=user_id,
+                            access_token=access,
+                            date_from_iso=date_from,
+                            date_to_iso=date_to,
+                        )
+                    except Exception:
                         log_warn(f"Mesmo após refresh → client_id {client_id} pulado")
                         clientes_pulados.append(str(client_id))
                         continue
-
-                    orders = resp2.json()
                 else:
                     log_warn(f"Erro ao buscar pedidos client_id={client_id}: {e}")
                     clientes_pulados.append(str(client_id))
@@ -499,6 +555,8 @@ def main():
             "clientes_processados": clientes_processados,
             "clientes_pulados": clientes_pulados,
             "total_pedidos": total_orders,
+            "date_from": date_from,
+            "date_to": date_to,
         }
 
         register_log(conn, "success", details)
